@@ -17,7 +17,7 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
   });
-  
+
   const swaggerService = app.get(SwaggerService);
   swaggerService.setupSwagger(app);
   const PORT = configService.get<string>('API_PORT', { infer: true });
