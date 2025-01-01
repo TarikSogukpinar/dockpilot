@@ -3,6 +3,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './database/database.module';
+import { ContainerModule } from './container/container.module';
+import { SwaggerModule } from './core/swagger/swagger.module';
 
 @Module({
   imports: [
@@ -20,7 +22,9 @@ import { PrismaModule } from './database/database.module';
         return envFilePath;
       })(),
     }),
-    PrismaModule
+    SwaggerModule,
+    PrismaModule,
+    ContainerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
