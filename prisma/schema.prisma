@@ -13,14 +13,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+  GUEST
+}
+
+enum AccountType {
+  FREE
+  MEDIUM
+  PREMIUM
+}
+
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String?
-  createdAt DateTime @default(now())
-  servers   Server[]
-  Log       Log[]
+  id           Int         @id @default(autoincrement())
+  uuid         String      @unique @default(uuid())
+  email        String      @unique
+  password     String
+  name         String?
+  refreshToken String?
+  accessToken  String?
+  role         Role        @default(USER)
+  accountType  AccountType @default(FREE)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  servers      Server[]
+  Log          Log[]
 }
 
 model Server {
@@ -55,4 +74,15 @@ model Log {
   user      User     @relation(fields: [userId], references: [id])
   serverId  Int
   server    Server   @relation(fields: [serverId], references: [id])
+}
+
+model BlacklistedToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+  @@index([token])
+  @@map("blacklistedTokens")
 }

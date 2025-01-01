@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './database/database.module';
 import { ContainerModule } from './container/container.module';
 import { SwaggerModule } from './core/swagger/swagger.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SwaggerModule } from './core/swagger/swagger.module';
       })(),
     }),
     SwaggerModule,
+    AuthModule,
     PrismaModule,
     ContainerModule,
   ],
