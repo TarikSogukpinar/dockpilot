@@ -44,6 +44,7 @@ model User {
 
 model Connection {
   id         Int         @id @default(autoincrement())
+  uuid       String      @unique @default(uuid())
   host       String // Docker host bilgisi
   port       Int // Docker port bilgisi
   tlsConfig  Json? // TLS yapılandırması (isteğe bağlı)

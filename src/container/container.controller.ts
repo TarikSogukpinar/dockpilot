@@ -11,21 +11,21 @@ import { JwtAuthGuard } from "src/auth/guard/auth.guard";
 export class ContainerController {
     constructor(private readonly containerService: ContainerService) { }
 
-    @Post(':connectionId/create')
+    @Post(':connectionUuid/create')
     @UseGuards(JwtAuthGuard)
     async createContainer(
-        @Req() customRequest:CustomRequest,
-        @Param('connectionId') connectionId: number,
+        @Req() customRequest: CustomRequest,
+        @Param('connectionUuid') connectionUuid: string,
         @Body() options: any,
     ) {
         const userId = customRequest.user.id; // Kullanıcı ID'si Auth middleware'den alınır
-        return this.containerService.createAndStartContainer(userId, connectionId, options);
+        return this.containerService.createAndStartContainer(userId, connectionUuid, options);
     }
 
     @Get(':connectionId')
     @UseGuards(JwtAuthGuard)
-    async listContainers(@Req() customRequest:CustomRequest, @Param('connectionId') connectionId: number) {
+    async listContainers(@Req() customRequest: CustomRequest, @Param('connectionId') connectionUuid: string) {
         const userId = customRequest.user.id;
-        return this.containerService.listContainers(userId, connectionId);
+        return this.containerService.listContainers(userId, connectionUuid);
     }
 }

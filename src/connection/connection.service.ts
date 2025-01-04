@@ -22,14 +22,13 @@ export class ConnectionService {
         });
     }
 
-    async getConnectionById(connectionId: number, userId: number) {
-        if (!connectionId) {
-            throw new Error('Connection ID is required.');
+    async getConnectionById(connectionUuid: string, userId: number) {
+        if (!connectionUuid) {
+            throw new Error('Connection ID is required');
         }
 
-        
         const connection = await this.prisma.connection.findUnique({
-            where: { id: connectionId },
+            where: { uuid: connectionUuid },
         });
 
         if (!connection || connection.ownerId !== userId) {

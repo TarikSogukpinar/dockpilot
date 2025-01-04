@@ -17,8 +17,8 @@ export class ContainerService {
     }
 
 
-    async createAndStartContainer(userId: number, connectionId: number, options: ContainerCreateOptions): Promise<string> {
-        const connection = await this.connectionService.getConnectionById(connectionId, userId); // Kullanıcının bağlantısını al
+    async createAndStartContainer(userId: number, connectionUuid: string, options: ContainerCreateOptions): Promise<string> {
+        const connection = await this.connectionService.getConnectionById(connectionUuid, userId); // Kullanıcının bağlantısını al
         this.initializeDocker(connection);
 
         try {
@@ -35,8 +35,8 @@ export class ContainerService {
 
 
     // 2. Tüm konteynerleri listeleme
-    async listContainers(userId: number, connectionId: number): Promise<ContainerInfo[]> {
-        const connection = await this.connectionService.getConnectionById(connectionId, userId);
+    async listContainers(userId: number, connectionUuid: string): Promise<ContainerInfo[]> {
+        const connection = await this.connectionService.getConnectionById(connectionUuid, userId);
         this.initializeDocker(connection);
 
         try {
