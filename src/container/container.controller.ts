@@ -1,6 +1,5 @@
-import { Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, Req } from "@nestjs/common";
 import { ContainerService } from "./container.service";
-import { ContainerCreateOptions } from 'dockerode';
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 
 @Controller({ path: 'container', version: '1' })
@@ -9,13 +8,19 @@ import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 export class ContainerController {
     constructor(private readonly containerService: ContainerService) { }
 
-    @Post('create')
-    async createContainer(@Body() options: ContainerCreateOptions) {
-        return this.containerService.createAndStartContainer(options);
+    @Post(':connectionId/create')
+    async createContainer(
+        @Req() req,
+        @Param('connectionId') connectionId: number,
+        @Body() options: any,
+    ) {
+        const userId = req.user.id; // Kullanıcı ID'si Auth middleware'den alınır
+        return this.containerService.createAndStartContainer(userId, connectionId, options);
     }
 
-    @Get("list")
-    async listContainers() {
-        return this.containerService.listContainers();
+    @Get(':connectionId')
+    async listContainers(@Req() req, @Param('connectionId') connectionId: number) {
+        const userId = req.user.id;
+        return this.containerService.listContainers(userId, connectionId);
     }
 }

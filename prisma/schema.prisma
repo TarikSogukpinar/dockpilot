@@ -27,43 +27,41 @@ enum AccountType {
 }
 
 model User {
-  id           Int         @id @default(autoincrement())
-  uuid         String      @unique @default(uuid())
-  email        String      @unique
+  id           Int          @id @default(autoincrement())
+  uuid         String       @unique @default(uuid())
+  email        String       @unique
   password     String
   name         String?
   refreshToken String?
   accessToken  String?
-  role         Role        @default(USER)
-  accountType  AccountType @default(FREE)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  servers      Server[]
+  role         Role         @default(USER)
+  accountType  AccountType  @default(FREE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  connections  Connection[]
   Log          Log[]
 }
 
-model Server {
+model Connection {
   id         Int         @id @default(autoincrement())
-  name       String
-  host       String
-  port       Int
-  tlsConfig  Json?
+  host       String // Docker host bilgisi
+  port       Int // Docker port bilgisi
+  tlsConfig  Json? // TLS yapılandırması (isteğe bağlı)
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
-  ownerId    Int
+  ownerId    Int // Kullanıcı ID'si
   owner      User        @relation(fields: [ownerId], references: [id])
   containers Container[]
-  Log        Log[]
 }
 
 model Container {
-  id        Int      @id @default(autoincrement())
-  name      String
-  image     String
-  status    String
-  serverId  Int
-  server    Server   @relation(fields: [serverId], references: [id])
-  createdAt DateTime @default(now())
+  id           Int        @id @default(autoincrement())
+  name         String
+  image        String
+  status       String
+  connectionId Int
+  connection   Connection @relation(fields: [connectionId], references: [id])
+  createdAt    DateTime   @default(now())
 }
 
 model Log {
@@ -73,7 +71,6 @@ model Log {
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
   serverId  Int
-  server    Server   @relation(fields: [serverId], references: [id])
 }
 
 model BlacklistedToken {

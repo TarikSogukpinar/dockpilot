@@ -13,7 +13,6 @@ import {
     HttpStatus,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginUserDto } from './dto/loginUser.dto';
 import {
     ApiTags,
     ApiOperation,
@@ -21,16 +20,17 @@ import {
     ApiBody,
     ApiBearerAuth,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from './guards/auth.guard';
-import { CustomRequest } from '../core/request/customRequest';
-import { RegisterUserDto } from './dto/registerUser.dto';
-import { LogoutDto } from './dto/logout.dto';
-import { ErrorCodes } from 'src/core/handler/error/error-codes';
 import { AuthGuard } from '@nestjs/passport';
-import { LogoutResponseDto } from './dto/logoutResponse.dto';
 import { ConfigService } from '@nestjs/config';
 import { TokenService } from 'src/core/token/token.service';
 import { Request } from 'express';
+import { RegisterUserDto } from './dto/requests/registerUser.dto';
+import { LoginUserDto } from './dto/requests/loginUser.dto';
+import { LogoutResponseDto } from './dto/responses/logoutResponse.dto';
+import { LogoutDto } from './dto/requests/logout.dto';
+import { JwtAuthGuard } from './guard/auth.guard';
+import { CustomRequest } from 'src/core/request/customRequest';
+import { InvalidCredentialsException, InvalidTokenException } from 'src/core/handler/exceptions/custom-exception';
 
 @Controller({ path: 'auth', version: '1' })
 @ApiTags('Auth')
@@ -137,11 +137,11 @@ export class AuthController {
         const token = authHeader ? authHeader.split(' ')[1] : null;
 
         if (!userId) {
-            throw new UnauthorizedException(ErrorCodes.InvalidCredentials);
+            throw new InvalidCredentialsException();
         }
 
         if (!token) {
-            throw new UnauthorizedException(ErrorCodes.InvalidCredentials);
+            throw new InvalidCredentialsException();
         }
 
         const result = await this.authService.logoutUserService(userId, token);
@@ -164,7 +164,7 @@ export class AuthController {
             await this.tokenService.verifyToken(jwt);
             return await res.redirect(`${this.redirectUrl}?JWT=${jwt}`);
         } catch (error) {
-            throw new UnauthorizedException(ErrorCodes.InvalidToken);
+            throw new InvalidTokenException();
         }
     }
 }

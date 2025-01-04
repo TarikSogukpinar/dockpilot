@@ -3,6 +3,8 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { SwaggerService } from './core/swagger/swagger.service';
+import { HttpExceptionFilter } from './core/handler/error/http-exception.filter';
+import validationOptions from './utils/validate/validate-options';
 
 
 async function bootstrap() {
@@ -17,6 +19,8 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
   });
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalPipes(new ValidationPipe(validationOptions));
 
   const swaggerService = app.get(SwaggerService);
   swaggerService.setupSwagger(app);

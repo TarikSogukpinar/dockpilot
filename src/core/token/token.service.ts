@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import { PrismaService } from '../../database/database.service';
-import { ErrorCodes } from '../handler/error/error-codes';
+import { InvalidTokenException } from "../handler/exceptions/custom-exception"
 
 @Injectable()
 export class TokenService {
@@ -20,12 +20,12 @@ export class TokenService {
 
             const isBlacklisted = await this.isTokenBlacklisted(token);
             if (isBlacklisted) {
-                throw new UnauthorizedException(ErrorCodes.InvalidToken);
+                throw new InvalidTokenException();
             }
 
             return decoded;
         } catch (error) {
-            throw new UnauthorizedException(ErrorCodes.InvalidToken);
+            throw new InvalidTokenException();
         }
     }
 
@@ -74,7 +74,7 @@ export class TokenService {
             });
             userEmail = decoded.email;
         } catch (error) {
-            throw new UnauthorizedException(ErrorCodes.InvalidToken);
+            throw new InvalidTokenException();
         }
 
         const user = await this.prismaService.user.findUnique({
@@ -82,7 +82,7 @@ export class TokenService {
         });
 
         if (!user || user.refreshToken !== refreshToken) {
-            throw new UnauthorizedException(ErrorCodes.InvalidToken);
+            throw new InvalidTokenException();
         }
 
         return this.createAccessToken(user);
@@ -98,7 +98,7 @@ export class TokenService {
             });
         } catch (error) {
             console.error('Error in blacklistToken:', error);
-            throw new UnauthorizedException(ErrorCodes.InvalidToken);
+            throw new InvalidTokenException();
         }
     }
 

@@ -6,6 +6,7 @@ import { PrismaModule } from './database/database.module';
 import { ContainerModule } from './container/container.module';
 import { SwaggerModule } from './core/swagger/swagger.module';
 import { AuthModule } from './auth/auth.module';
+import { ConnectionModule } from './connection/connection.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
     PrismaModule,
     ContainerModule,
+    ConnectionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

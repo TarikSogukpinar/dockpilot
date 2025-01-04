@@ -4,18 +4,13 @@ import { TokenService } from '../core/token/token.service';
 import { User } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import {
-    EmailNotFoundException,
-    InvalidCredentialsException,
-    UserAlreadyExistsException,
-    UserNotFoundException,
-} from 'src/core/handler/exceptions/custom-expection';
 import { HashingService } from 'src/utils/hashing/hashing.service';
 import { RegisterUserDto } from './dto/requests/registerUser.dto';
 import { RegisterResponseDto } from './dto/responses/registerResponse.dto';
 import { LoginUserDto } from './dto/requests/loginUser.dto';
 import { LoginResponseDto } from './dto/responses/loginResponse.dto';
 import { LogoutResponseDto } from './dto/responses/logoutResponse.dto';
+import { EmailNotFoundException, InvalidCredentialsException, UserAlreadyExistsException, UserNotFoundException } from 'src/core/handler/exceptions/custom-exception';
 
 @Injectable()
 export class AuthService {

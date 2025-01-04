@@ -1,37 +1,48 @@
 import { Injectable } from "@nestjs/common";
 import Docker, { ContainerCreateOptions, ContainerInfo } from 'dockerode';
+import { ConnectionService } from "src/connection/connection.service";
 
 
 @Injectable()
 export class ContainerService {
     private dockerService: Docker
 
-    constructor() {
-        // Local Docker daemon ile iletişim kuran Docker instance
+    constructor(private readonly connectionService: ConnectionService) { }
+
+    private initializeDocker(connection: { host: string; port: number }): void {
         this.dockerService = new Docker({
-            host: 'localhost', // Localhost üzerinden bağlanıyoruz
-            port: 2375,        // Docker Desktop'un açık TCP portu
+            host: connection.host,
+            port: connection.port,
         });
     }
 
-    async createAndStartContainer(options: ContainerCreateOptions): Promise<string> {
+
+    async createAndStartContainer(userId: number, connectionId: number, options: ContainerCreateOptions): Promise<string> {
+        const connection = await this.connectionService.getConnectionById(connectionId, userId); // Kullanıcının bağlantısını al
+        this.initializeDocker(connection);
+
         try {
             await this.pullImage(options.Image);
             const container = await this.dockerService.createContainer(options);
             await container.start();
+
             return `Container ${container.id} created and started successfully.`;
         } catch (error) {
-            console.log(error);
+            console.error(error);
             throw new Error(`Failed to create and start container: ${error.message}`);
         }
     }
 
+
     // 2. Tüm konteynerleri listeleme
-    async listContainers(): Promise<ContainerInfo[]> {
+    async listContainers(userId: number, connectionId: number): Promise<ContainerInfo[]> {
+        const connection = await this.connectionService.getConnectionById(connectionId, userId);
+        this.initializeDocker(connection);
+
         try {
             return await this.dockerService.listContainers();
         } catch (error) {
-            console.log(error);
+            console.error(error);
             throw new Error(`Failed to list containers: ${error.message}`);
         }
     }

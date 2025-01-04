@@ -10,6 +10,8 @@ import { GithubStrategy } from './strategies/github.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { AuthController } from './auth.controller';
+import { HttpModule } from '@nestjs/axios';
 
 
 @Module({
@@ -22,6 +24,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         HashingModule,
         TokenModule,
         PrismaModule,
+        HttpModule,
     ],
     controllers: [AuthController],
     providers: [

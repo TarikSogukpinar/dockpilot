@@ -6,6 +6,18 @@ export class UserNotFoundException extends HttpException {
     }
 }
 
+export class UserAlreadyExistsException extends HttpException {
+    constructor() {
+        super('User already exists', HttpStatus.BAD_REQUEST);
+    }
+}
+
+export class EmailNotFoundException extends HttpException {
+    constructor() {
+        super('Email not found', HttpStatus.NOT_FOUND);
+    }
+}
+
 export class InvalidCredentialsException extends HttpException {
     constructor() {
         super('Invalid credentials', HttpStatus.UNAUTHORIZED);
@@ -15,5 +27,11 @@ export class InvalidCredentialsException extends HttpException {
 export class PassportCannotBeTheSameException extends HttpException {
     constructor() {
         super('Passport cannot be the same', HttpStatus.BAD_REQUEST);
+    }
+}
+
+export class InvalidTokenException extends HttpException {
+    constructor() {
+        super('Invalid token', HttpStatus.UNAUTHORIZED);
     }
 }
