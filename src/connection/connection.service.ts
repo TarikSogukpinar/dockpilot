@@ -23,6 +23,11 @@ export class ConnectionService {
     }
 
     async getConnectionById(connectionId: number, userId: number) {
+        if (!connectionId) {
+            throw new Error('Connection ID is required.');
+        }
+
+        
         const connection = await this.prisma.connection.findUnique({
             where: { id: connectionId },
         });
