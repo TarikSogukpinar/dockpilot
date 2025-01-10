@@ -6,7 +6,6 @@ import { SwaggerService } from './core/swagger/swagger.service';
 import { HttpExceptionFilter } from './core/handler/error/http-exception.filter';
 import validationOptions from './utils/validate/validate-options';
 
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: console,
@@ -25,7 +24,6 @@ async function bootstrap() {
   const swaggerService = app.get(SwaggerService);
   swaggerService.setupSwagger(app);
   const PORT = configService.get<string>('API_PORT', { infer: true });
-
 
   await app.listen(
     configService.get<number>('API_PORT', { infer: true }),

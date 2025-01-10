@@ -8,8 +8,7 @@ export class PrismaService
     implements OnModuleInit, OnModuleDestroy {
     constructor(private configService: ConfigService) {
         const prisma = new PrismaClient();
-
-
+        
         super({
             datasources: {
                 db: {

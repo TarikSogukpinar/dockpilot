@@ -18,14 +18,25 @@ export class ContainerController {
         @Param('connectionUuid') connectionUuid: string,
         @Body() options: any,
     ) {
-        const userId = customRequest.user.id; // Kullanıcı ID'si Auth middleware'den alınır
+        const userId = customRequest.user.id;
         return this.containerService.createAndStartContainer(userId, connectionUuid, options);
     }
 
-    @Get(':connectionId')
+    @Get(':connectionUuid')
     @UseGuards(JwtAuthGuard)
-    async listContainers(@Req() customRequest: CustomRequest, @Param('connectionId') connectionUuid: string) {
+    async listContainers(@Req() customRequest: CustomRequest, @Param('connectionUuid') connectionUuid: string) {
         const userId = customRequest.user.id;
         return this.containerService.listContainers(userId, connectionUuid);
+    }
+
+    @Post(':connectionUuid/:containerId/stop')
+    @UseGuards(JwtAuthGuard)
+    async stopContainer(
+        @Req() customRequest: CustomRequest,
+        @Param('connectionUuid') connectionUuid: string,
+        @Param('containerId') containerId: string,
+    ) {
+        const userId = customRequest.user.id;
+        return this.containerService.stopContainer(userId, connectionUuid, containerId);
     }
 }
