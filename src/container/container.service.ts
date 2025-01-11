@@ -28,12 +28,15 @@ export class ContainerService {
             const container = await this.dockerService.createContainer(options);
             await container.start();
 
+            const dockerId = container.id;
+
             await this.prismaService.container.create({
                 data: {
                     name: options.name,
                     image: options.Image,
                     status: ContainerStatus.CREATED, // Başlatıldığı için durum "running" olarak kaydedilir
                     connectionId: connection.id, // Bağlantı ID'si
+                    dockerId: dockerId, // Docker'dan alınan benzersiz ID
                 },
             });
 
@@ -58,21 +61,38 @@ export class ContainerService {
     }
 
     async stopContainer(userId: number, connectionUuid: string, containerUuid: string): Promise<string> {
+        // Kullanıcı bağlantısını doğrula
         const connection = await this.connectionService.getConnectionById(connectionUuid, userId);
         this.initializeDocker(connection);
 
-        try {
-            const container = this.dockerService.getContainer(containerUuid);
+        // Veritabanından konteyner kaydını al
+        const containerRecord = await this.prismaService.container.findFirst({
+            where: {
+                uuid: containerUuid,
+                connectionId: connection.id, // Doğru bağlantıya ait olduğundan emin olun
+            },
+        });
 
+        if (!containerRecord) {
+            throw new Error(`Container with UUID ${containerUuid} not found for the given connection.`);
+        }
+
+        const dockerContainerId = containerRecord.dockerId;
+
+        try {
             // Docker'daki konteyneri durdur
+            const container = this.dockerService.getContainer(dockerContainerId);
             await container.stop();
 
-            // Veritabanında konteyner durumunu güncelle
-            await this.updateContainerStatus(containerUuid, 'stopped');
+            // Veritabanında durumu güncelle
+            await this.prismaService.container.update({
+                where: { uuid: containerUuid },
+                data: { status: ContainerStatus.PAUSED },
+            });
 
-            return `Container ${containerUuid} stopped successfully.`;
+            return `Container ${dockerContainerId} stopped successfully.`;
         } catch (error) {
-            console.error(error);
+            console.error(`Error stopping container: ${error.message}`);
             throw new Error(`Failed to stop container: ${error.message}`);
         }
     }

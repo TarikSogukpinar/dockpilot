@@ -68,6 +68,7 @@ model Connection {
 model Container {
   id           Int             @id @default(autoincrement())
   uuid         String          @unique @default(uuid())
+  dockerId     String 
   name         String
   image        String
   status       ContainerStatus @default(CREATED)
