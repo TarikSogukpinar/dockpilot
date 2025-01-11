@@ -1,13 +1,15 @@
 import { Injectable } from "@nestjs/common";
+import { ContainerStatus } from "@prisma/client";
 import Docker, { ContainerCreateOptions, ContainerInfo } from 'dockerode';
 import { ConnectionService } from "src/connection/connection.service";
+import { PrismaService } from "src/database/database.service";
 
 
 @Injectable()
 export class ContainerService {
     private dockerService: Docker
 
-    constructor(private readonly connectionService: ConnectionService) { }
+    constructor(private readonly connectionService: ConnectionService, private readonly prismaService: PrismaService) { }
 
     private initializeDocker(connection: { host: string; port: number }): void {
         this.dockerService = new Docker({
@@ -26,13 +28,21 @@ export class ContainerService {
             const container = await this.dockerService.createContainer(options);
             await container.start();
 
+            await this.prismaService.container.create({
+                data: {
+                    name: options.name,
+                    image: options.Image,
+                    status: ContainerStatus.CREATED, // Başlatıldığı için durum "running" olarak kaydedilir
+                    connectionId: connection.id, // Bağlantı ID'si
+                },
+            });
+
             return `Container ${container.id} created and started successfully.`;
         } catch (error) {
             console.error(error);
             throw new Error(`Failed to create and start container: ${error.message}`);
         }
     }
-
 
     // 2. Tüm konteynerleri listeleme
     async listContainers(userId: number, connectionUuid: string): Promise<ContainerInfo[]> {
@@ -47,17 +57,36 @@ export class ContainerService {
         }
     }
 
-    async stopContainer(userId: number, connectionUuid: string, containerId: string): Promise<string> {
+    async stopContainer(userId: number, connectionUuid: string, containerUuid: string): Promise<string> {
         const connection = await this.connectionService.getConnectionById(connectionUuid, userId);
         this.initializeDocker(connection);
 
         try {
-            const container = this.dockerService.getContainer(containerId);
+            const container = this.dockerService.getContainer(containerUuid);
+
+            // Docker'daki konteyneri durdur
             await container.stop();
-            return `Container ${containerId} stopped successfully.`;
+
+            // Veritabanında konteyner durumunu güncelle
+            await this.updateContainerStatus(containerUuid, 'stopped');
+
+            return `Container ${containerUuid} stopped successfully.`;
         } catch (error) {
             console.error(error);
             throw new Error(`Failed to stop container: ${error.message}`);
+        }
+    }
+
+    private async updateContainerStatus(containerUuid: string, status: string): Promise<void> {
+        try {
+            // `containerUuid` üzerinden güncelleme
+            await this.prismaService.container.update({
+                where: { uuid: containerUuid }, // `uuid` alanını kullanıyoruz
+                data: { status: ContainerStatus.PAUSED },
+            });
+        } catch (error) {
+            console.error(`Failed to update container status in database: ${error.message}`);
+            throw new Error(`Failed to update container status in database: ${error.message}`);
         }
     }
 
@@ -80,7 +109,7 @@ export class ContainerService {
         this.initializeDocker(connection);
 
         try {
-            const container = this.dockerService.getContainer(containerId);
+            const container = await this.dockerService.getContainer(containerId);
             return await container.inspect();
         } catch (error) {
             console.error(error);
@@ -176,9 +205,6 @@ export class ContainerService {
             throw new Error(`Failed to get stats for container ${containerId}: ${error.message}`);
         }
     }
-
-
-
 
     private async pullImage(image: string): Promise<void> {
         return new Promise((resolve, reject) => {

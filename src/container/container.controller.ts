@@ -29,7 +29,7 @@ export class ContainerController {
         return this.containerService.listContainers(userId, connectionUuid);
     }
 
-    @Post(':connectionUuid/:containerId/stop')
+    @Post(':containerId/:connectionUuid/stop')
     @UseGuards(JwtAuthGuard)
     async stopContainer(
         @Req() customRequest: CustomRequest,

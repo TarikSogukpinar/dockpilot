@@ -13,6 +13,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ContainerStatus {
+  CREATED
+  RUNNING
+  PAUSED
+  RESTARTING
+  REMOVING
+  EXITED
+  DEAD
+}
+
 enum Role {
   USER
   ADMIN
@@ -56,13 +66,14 @@ model Connection {
 }
 
 model Container {
-  id           Int        @id @default(autoincrement())
+  id           Int             @id @default(autoincrement())
+  uuid         String          @unique @default(uuid())
   name         String
   image        String
-  status       String
+  status       ContainerStatus @default(CREATED)
   connectionId Int
-  connection   Connection @relation(fields: [connectionId], references: [id])
-  createdAt    DateTime   @default(now())
+  connection   Connection      @relation(fields: [connectionId], references: [id])
+  createdAt    DateTime        @default(now())
 }
 
 model Log {
