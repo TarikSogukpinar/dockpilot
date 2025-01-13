@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ServiceUnavailableException } from "@nes
 import { ContainerStatus } from "@prisma/client";
 import Docker, { ContainerCreateOptions, ContainerInfo } from 'dockerode';
 import { ConnectionChecker } from "src/connection/connection.checker";
-import { Connection } from "src/connection/connection.interface";
+import { Connection, DockerSetupResponse } from "src/connection/connection.interface";
 import { ConnectionService } from "src/connection/connection.service";
 import { PrismaService } from "src/database/database.service";
 @Injectable()
@@ -19,21 +19,38 @@ export class ContainerService {
         });
     }
 
-    private async setupDocker(userId: number, connectionUuid: string): Promise<void> {
+    private async setupDocker(userId: number, connectionUuid: string): Promise<DockerSetupResponse> {
         try {
             const connection = await this.connectionService.getConnectionById(connectionUuid, userId);
             const connectionStatus = await this.connectionChecker.checkConnection(connection);
 
             if (!connectionStatus.isConnected) {
-                throw new ServiceUnavailableException(
-                    `Docker connection failed: ${connectionStatus.error}`
-                );
+                return {
+                    isConnected: false,
+                    connection,
+                    error: `Docker connection failed: ${connectionStatus.error}`
+                };
             }
 
             if (!this.currentConnection || this.currentConnection.uuid !== connection.uuid) {
                 this.initializeDocker(connection);
                 this.currentConnection = connection;
             }
+
+            // Docker bilgilerini al
+            const dockerInfo = await this.dockerService.info();
+
+            return {
+                isConnected: true,
+                connection,
+                dockerInfo: {
+                    version: dockerInfo.ServerVersion,
+                    containers: dockerInfo.Containers,
+                    images: dockerInfo.Images,
+                    serverTime: dockerInfo.SystemTime,
+                    operatingSystem: dockerInfo.OperatingSystem
+                }
+            };
 
         } catch (error) {
             if (error instanceof NotFoundException) {
@@ -42,7 +59,12 @@ export class ContainerService {
             if (error instanceof ServiceUnavailableException) {
                 throw error;
             }
-            throw new Error(`Failed to setup Docker connection: ${error.message}`);
+
+            return {
+                isConnected: false,
+                connection: null,
+                error: `Failed to setup Docker connection: ${error.message}`
+            };
         }
     }
 
@@ -51,7 +73,11 @@ export class ContainerService {
         //const connection = await this.connectionService.getConnectionById(connectionUuid, userId); // Kullanıcının bağlantısını al
         //this.initializeDocker(connection);
 
-        await this.setupDocker(userId, connectionUuid);
+        const setupResponse = await this.setupDocker(userId, connectionUuid);
+
+        if (!setupResponse.isConnected) {
+            throw new ServiceUnavailableException(setupResponse.error);
+        }
 
         try {
             await this.pullImage(options.Image);

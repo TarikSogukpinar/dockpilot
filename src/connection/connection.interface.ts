@@ -8,3 +8,11 @@ export interface Connection {
     createdAt: Date;
     updatedAt: Date;
 }
+
+//REFACTOR THIS
+export interface DockerSetupResponse {
+    isConnected: boolean;
+    connection: Connection;
+    dockerInfo?: any;
+    error?: string;
+}
