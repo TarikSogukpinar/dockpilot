@@ -1,15 +1,16 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { ContainerStatus } from "@prisma/client";
 import Docker, { ContainerCreateOptions, ContainerInfo } from 'dockerode';
+import { ConnectionChecker } from "src/connection/connection.checker";
+import { Connection } from "src/connection/connection.interface";
 import { ConnectionService } from "src/connection/connection.service";
 import { PrismaService } from "src/database/database.service";
-
-
 @Injectable()
 export class ContainerService {
     private dockerService: Docker
+    private currentConnection: Connection | null = null;
 
-    constructor(private readonly connectionService: ConnectionService, private readonly prismaService: PrismaService) { }
+    constructor(private readonly connectionService: ConnectionService, private readonly prismaService: PrismaService, private readonly connectionChecker: ConnectionChecker) { }
 
     private initializeDocker(connection: { host: string; port: number }): void {
         this.dockerService = new Docker({
@@ -18,10 +19,39 @@ export class ContainerService {
         });
     }
 
+    private async setupDocker(userId: number, connectionUuid: string): Promise<void> {
+        try {
+            const connection = await this.connectionService.getConnectionById(connectionUuid, userId);
+            const connectionStatus = await this.connectionChecker.checkConnection(connection);
+
+            if (!connectionStatus.isConnected) {
+                throw new ServiceUnavailableException(
+                    `Docker connection failed: ${connectionStatus.error}`
+                );
+            }
+
+            if (!this.currentConnection || this.currentConnection.uuid !== connection.uuid) {
+                this.initializeDocker(connection);
+                this.currentConnection = connection;
+            }
+
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw new NotFoundException('Connection not found or access denied');
+            }
+            if (error instanceof ServiceUnavailableException) {
+                throw error;
+            }
+            throw new Error(`Failed to setup Docker connection: ${error.message}`);
+        }
+    }
+
 
     async createAndStartContainer(userId: number, connectionUuid: string, options: ContainerCreateOptions): Promise<string> {
-        const connection = await this.connectionService.getConnectionById(connectionUuid, userId); // Kullanıcının bağlantısını al
-        this.initializeDocker(connection);
+        //const connection = await this.connectionService.getConnectionById(connectionUuid, userId); // Kullanıcının bağlantısını al
+        //this.initializeDocker(connection);
+
+        await this.setupDocker(userId, connectionUuid);
 
         try {
             await this.pullImage(options.Image);
@@ -35,7 +65,8 @@ export class ContainerService {
                     name: options.name,
                     image: options.Image,
                     status: ContainerStatus.CREATED, // Başlatıldığı için durum "running" olarak kaydedilir
-                    connectionId: connection.id, // Bağlantı ID'si
+                    connectionId: this.currentConnection.id,
+                    //connectionId: connection.id, // Bağlantı ID'si
                     dockerId: dockerId, // Docker'dan alınan benzersiz ID
                 },
             });
