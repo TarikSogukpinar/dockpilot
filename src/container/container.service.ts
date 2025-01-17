@@ -209,15 +209,43 @@ export class ContainerService {
         }
     }
 
-    async inspectContainer(userId: number, connectionUuid: string, containerId: string): Promise<Docker.ContainerInspectInfo> {
-        const connection = await this.connectionService.getConnectionById(connectionUuid, userId);
-        this.initializeDocker(connection);
+    async inspectContainer(userId: number, connectionUuid: string, containerUuid: string): Promise<Docker.ContainerInspectInfo> {
+        const setupResponse = await this.setupDocker(userId, connectionUuid);
+
+        if (!setupResponse.isConnected) {
+            throw new ServiceUnavailableException(setupResponse.error);
+        }
+
+        // Debug için log ekleyelim
+        console.log('Debug inspectContainer:', {
+            userId,
+            connectionUuid,
+            containerUuid,
+            currentConnectionId: this.currentConnection?.id
+        });
+
+        // Veritabanından konteyner kaydını al
+        const containerRecord = await this.prismaService.container.findFirst({
+            where: {
+                uuid: containerUuid,
+                connectionId: this.currentConnection.id,
+            },
+        });
+
+
+
+        if (!containerRecord) {
+            throw new Error(`Container with UUID ${containerUuid} not found for the given connection.`);
+        }
+
+        const dockerContainerId = containerRecord.dockerId;
 
         try {
-            const container = await this.dockerService.getContainer(containerId);
-            return await container.inspect();
+            const container = this.dockerService.getContainer(dockerContainerId);
+            const inspectResult = await container.inspect();
+            return inspectResult;
         } catch (error) {
-            console.error(error);
+            console.error(`Failed to inspect container: ${error.message}`);
             throw new Error(`Failed to inspect container: ${error.message}`);
         }
     }

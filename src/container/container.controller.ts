@@ -51,4 +51,18 @@ export class ContainerController {
         console.log(connectionUuid, "connectionUuid")
         return this.containerService.removeContainer(userId, connectionUuid, containerId);
     }
+
+    @Get(':containerId/:connectionUuid/inspect')
+    @UseGuards(JwtAuthGuard)
+    async inspectContainer(
+        @Req() customRequest: CustomRequest,
+        @Param('connectionUuid') connectionUuid: string,
+        @Param('containerId') containerId: string,
+    ) {
+        const userId = customRequest.user.id;
+        
+
+        
+        return this.containerService.inspectContainer(userId, connectionUuid, containerId);
+    }
 }
