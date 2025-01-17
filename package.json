@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "dev": "cross-env NODE_ENV=development dotenv -e .env.development -- npx prisma generate && nest start -b swc -w",
+    "dev": "cross-env NODE_ENV=development dotenv -e .env.development -- npx prisma generate &&  nest start -b swc -w",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "migrate:dev": "cross-env dotenv -e .env.development -- npx prisma migrate dev --name init",
     "start": "nest start",
@@ -35,6 +35,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "dockerode": "^4.0.2",
+    "ioredis": "^5.4.2",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",

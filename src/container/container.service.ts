@@ -216,14 +216,6 @@ export class ContainerService {
             throw new ServiceUnavailableException(setupResponse.error);
         }
 
-        // Debug için log ekleyelim
-        console.log('Debug inspectContainer:', {
-            userId,
-            connectionUuid,
-            containerUuid,
-            currentConnectionId: this.currentConnection?.id
-        });
-
         // Veritabanından konteyner kaydını al
         const containerRecord = await this.prismaService.container.findFirst({
             where: {
