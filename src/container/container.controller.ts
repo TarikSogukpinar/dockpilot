@@ -2,7 +2,6 @@ import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } fro
 import { ContainerService } from "./container.service";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { CustomRequest } from "src/core/request/customRequest";
-import { AuthGuard } from "@nestjs/passport";
 import { JwtAuthGuard } from "src/auth/guard/auth.guard";
 
 @Controller({ path: 'container', version: '1' })

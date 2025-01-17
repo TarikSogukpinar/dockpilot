@@ -5,6 +5,7 @@ import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { SwaggerService } from './core/swagger/swagger.service';
 import { HttpExceptionFilter } from './core/handler/error/http-exception.filter';
 import validationOptions from './utils/validate/validate-options';
+import { clusterize } from './clustering';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -33,4 +34,5 @@ async function bootstrap() {
   Logger.log(`🚀 Application is running on: http://localhost:${PORT}/`);
 }
 
-void bootstrap();
+if (process.env.CLUSTERING === 'true') clusterize(bootstrap);
+else bootstrap();
