@@ -104,10 +104,12 @@ export class ContainerService {
         }
     }
 
-    // 2. Tüm konteynerleri listeleme
     async listContainers(userId: number, connectionUuid: string): Promise<ContainerInfo[]> {
-        const connection = await this.connectionService.getConnectionById(connectionUuid, userId);
-        this.initializeDocker(connection);
+        const setupResponse = await this.setupDocker(userId, connectionUuid);
+
+        if (!setupResponse.isConnected) {
+            throw new ServiceUnavailableException(setupResponse.error);
+        }
 
         try {
             return await this.dockerService.listContainers();
@@ -119,14 +121,17 @@ export class ContainerService {
 
     async stopContainer(userId: number, connectionUuid: string, containerUuid: string): Promise<string> {
         // Kullanıcı bağlantısını doğrula
-        const connection = await this.connectionService.getConnectionById(connectionUuid, userId);
-        this.initializeDocker(connection);
+        const setupResponse = await this.setupDocker(userId, connectionUuid);
+
+        if (!setupResponse.isConnected) {
+            throw new ServiceUnavailableException(setupResponse.error);
+        }
 
         // Veritabanından konteyner kaydını al
         const containerRecord = await this.prismaService.container.findFirst({
             where: {
                 uuid: containerUuid,
-                connectionId: connection.id, // Doğru bağlantıya ait olduğundan emin olun
+                connectionId: this.currentConnection.id, // Doğru bağlantıya ait olduğundan emin olun
             },
         });
 
@@ -167,16 +172,39 @@ export class ContainerService {
         }
     }
 
-    async removeContainer(userId: number, connectionUuid: string, containerId: string): Promise<string> {
-        const connection = await this.connectionService.getConnectionById(connectionUuid, userId);
-        this.initializeDocker(connection);
+    async removeContainer(userId: number, connectionUuid: string, containerUuid: string): Promise<string> {
+        const setupResponse = await this.setupDocker(userId, connectionUuid);
+
+        if (!setupResponse.isConnected) {
+            throw new ServiceUnavailableException(setupResponse.error);
+        }
+
+        // Veritabanından konteyner kaydını al
+        const containerRecord = await this.prismaService.container.findFirst({
+            where: {
+                uuid: containerUuid,
+                connectionId: this.currentConnection.id,
+            },
+        });
+
+        if (!containerRecord) {
+            throw new Error(`Container with UUID ${containerUuid} not found for the given connection.`);
+        }
+
+        const dockerContainerId = containerRecord.dockerId;
 
         try {
-            const container = this.dockerService.getContainer(containerId);
-            await container.remove({ force: true }); // Force true ise çalışan konteyneri de siler
-            return `Container ${containerId} removed successfully.`;
+            const container = this.dockerService.getContainer(dockerContainerId);
+            await container.remove({ force: true });
+
+            // Veritabanından container kaydını sil
+            await this.prismaService.container.delete({
+                where: { uuid: containerUuid },
+            });
+
+            return `Container ${dockerContainerId} removed successfully.`;
         } catch (error) {
-            console.error(error);
+            console.error(`Failed to remove container: ${error.message}`);
             throw new Error(`Failed to remove container: ${error.message}`);
         }
     }

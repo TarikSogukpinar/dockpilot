@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from "@nestjs/common";
 import { ContainerService } from "./container.service";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { CustomRequest } from "src/core/request/customRequest";
@@ -38,5 +38,17 @@ export class ContainerController {
     ) {
         const userId = customRequest.user.id;
         return this.containerService.stopContainer(userId, connectionUuid, containerId);
+    }
+
+    @Delete(':containerId/:connectionUuid/delete')
+    @UseGuards(JwtAuthGuard)
+    async removeContainer(
+        @Req() customRequest: CustomRequest,
+        @Param('connectionUuid') connectionUuid: string,
+        @Param('containerId') containerId: string
+    ): Promise<string> {
+        const userId = customRequest.user.id;
+        console.log(connectionUuid, "connectionUuid")
+        return this.containerService.removeContainer(userId, connectionUuid, containerId);
     }
 }
