@@ -60,9 +60,71 @@ export class ContainerController {
         @Param('containerId') containerId: string,
     ) {
         const userId = customRequest.user.id;
-        
-
-        
         return this.containerService.inspectContainer(userId, connectionUuid, containerId);
+    }
+
+    @Post(':containerId/:connectionUuid/restart')
+    @UseGuards(JwtAuthGuard)
+    async restartContainer(
+        @Req() customRequest: CustomRequest,
+        @Param('connectionUuid') connectionUuid: string,
+        @Param('containerId') containerId: string,
+    ) {
+        const userId = customRequest.user.id;
+        return this.containerService.restartContainer(userId, connectionUuid, containerId);
+    }
+
+    @Get(':containerId/:connectionUuid/logs')
+    @UseGuards(JwtAuthGuard)
+    async getContainerLogs(
+        @Req() customRequest: CustomRequest,
+        @Param('connectionUuid') connectionUuid: string,
+        @Param('containerId') containerId: string,
+    ) {
+        const userId = customRequest.user.id;
+        return this.containerService.getContainerLogs(userId, connectionUuid, containerId);
+    }
+
+    @Post(':containerId/:connectionUuid/pause')
+    @UseGuards(JwtAuthGuard)
+    async pauseContainer(
+        @Req() customRequest: CustomRequest,
+        @Param('connectionUuid') connectionUuid: string,
+        @Param('containerId') containerId: string,
+    ) {
+        const userId = customRequest.user.id;
+        return this.containerService.pauseContainer(userId, connectionUuid, containerId);
+    }
+
+    @Post(':containerId/:connectionUuid/unpause')
+    @UseGuards(JwtAuthGuard)
+    async unpauseContainer(
+        @Req() customRequest: CustomRequest,
+        @Param('connectionUuid') connectionUuid: string,
+        @Param('containerId') containerId: string,
+    ) {
+        const userId = customRequest.user.id;
+        return this.containerService.unpauseContainer(userId, connectionUuid, containerId);
+    }
+
+    @Post(':connectionUuid/prune')
+    @UseGuards(JwtAuthGuard)
+    async pruneContainers(
+        @Req() customRequest: CustomRequest,
+        @Param('connectionUuid') connectionUuid: string,
+    ) {
+        const userId = customRequest.user.id;
+        return this.containerService.pruneContainers(userId, connectionUuid);
+    }
+
+    @Get(':containerId/:connectionUuid/stats')
+    @UseGuards(JwtAuthGuard)
+    async getContainerStats(
+        @Req() customRequest: CustomRequest,
+        @Param('connectionUuid') connectionUuid: string,
+        @Param('containerId') containerId: string,
+    ) {
+        const userId = customRequest.user.id;
+        return this.containerService.getContainerStats(userId, connectionUuid, containerId);
     }
 }
