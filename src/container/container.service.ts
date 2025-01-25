@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
-import { ContainerStatus } from "@prisma/client";
+import { ContainerStatus, ContainerHealthStatus, ContainerRestartPolicy, ContainerAction } from "@prisma/client";
 import Docker, { ContainerCreateOptions, ContainerInfo } from 'dockerode';
 import { ConnectionChecker } from "src/connection/connection.checker";
 import { Connection, DockerSetupResponse } from "src/connection/connection.interface";
 import { ConnectionService } from "src/connection/connection.service";
 import { PrismaService } from "src/database/database.service";
+
 @Injectable()
 export class ContainerService {
     private dockerService: Docker
@@ -271,14 +272,22 @@ export class ContainerService {
         }
     }
 
-    async getContainerLogs(userId: number, connectionUuid: string, containerUuid: string): Promise<string> {
+    async getContainerLogs(
+        userId: number,
+        connectionUuid: string,
+        containerUuid: string,
+        options: {
+            since?: Date;
+            until?: Date;
+            limit?: number;
+            stream?: string;
+        } = {}
+    ): Promise<any[]> {
         const setupResponse = await this.setupDocker(userId, connectionUuid);
-
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
         }
 
-        // Veritabanından konteyner kaydını al
         const containerRecord = await this.prismaService.container.findFirst({
             where: {
                 uuid: containerUuid,
@@ -287,22 +296,47 @@ export class ContainerService {
         });
 
         if (!containerRecord) {
-            throw new Error(`Container with UUID ${containerUuid} not found for the given connection.`);
+            throw new NotFoundException(`Container with UUID ${containerUuid} not found`);
         }
 
-        const dockerContainerId = containerRecord.dockerId;
-
         try {
-            const container = this.dockerService.getContainer(dockerContainerId);
-            const logs = await container.logs({
+            // Get Docker logs if needed
+            const container = this.dockerService.getContainer(containerRecord.dockerId);
+            const dockerLogs = await container.logs({
                 stdout: true,
                 stderr: true,
                 follow: false,
+                ...(options.since && { since: options.since.getTime() / 1000 }),
+                ...(options.until && { until: options.until.getTime() / 1000 }),
             });
 
-            return logs.toString('utf-8');
+            // Store the logs in the database
+            const logEntry = await this.prismaService.containerLog.create({
+                data: {
+                    uuid: crypto.randomUUID(),
+                    stream: 'stdout',
+                    message: dockerLogs.toString('utf-8'),
+                    containerId: containerRecord.id
+                }
+            });
+
+            // Query logs based on filters
+            const query: any = {
+                where: {
+                    containerId: containerRecord.id,
+                    ...(options.stream && { stream: options.stream }),
+                    ...(options.since && { timestamp: { gte: options.since } }),
+                    ...(options.until && { timestamp: { lte: options.until } })
+                },
+                orderBy: { timestamp: 'desc' }
+            };
+
+            if (options.limit) {
+                query.take = options.limit;
+            }
+
+            return this.prismaService.containerLog.findMany(query);
         } catch (error) {
-            console.error(`Failed to get logs for container: ${error.message}`);
             throw new Error(`Failed to get logs for container: ${error.message}`);
         }
     }
@@ -468,6 +502,187 @@ export class ContainerService {
                     console.log(event);
                 }
             });
+        });
+    }
+
+    // Lifecycle Management Methods
+    async updateContainerHealth(userId: number, connectionUuid: string, containerUuid: string): Promise<void> {
+        const setupResponse = await this.setupDocker(userId, connectionUuid);
+        if (!setupResponse.isConnected) {
+            throw new ServiceUnavailableException(setupResponse.error);
+        }
+
+        const containerRecord = await this.prismaService.container.findFirst({
+            where: {
+                uuid: containerUuid,
+                connectionId: this.currentConnection.id,
+            },
+        });
+
+        if (!containerRecord) {
+            throw new NotFoundException(`Container with UUID ${containerUuid} not found`);
+        }
+
+        try {
+            const container = this.dockerService.getContainer(containerRecord.dockerId);
+            const inspectInfo = await container.inspect();
+
+            let healthStatus: "HEALTHY" | "UNHEALTHY" | "STARTING" | "NONE" = "NONE";
+            if (inspectInfo.State.Health) {
+                switch (inspectInfo.State.Health.Status) {
+                    case 'healthy':
+                        healthStatus = "HEALTHY";
+                        break;
+                    case 'unhealthy':
+                        healthStatus = "UNHEALTHY";
+                        break;
+                    case 'starting':
+                        healthStatus = "STARTING";
+                        break;
+                }
+            }
+
+            await this.prismaService.container.update({
+                where: { uuid: containerUuid },
+                data: {
+                    healthStatus,
+                    exitCode: inspectInfo.State.ExitCode,
+                    startedAt: inspectInfo.State.StartedAt ? new Date(inspectInfo.State.StartedAt) : null,
+                    finishedAt: inspectInfo.State.FinishedAt ? new Date(inspectInfo.State.FinishedAt) : null
+                }
+            });
+        } catch (error) {
+            throw new Error(`Failed to update container health: ${error.message}`);
+        }
+    }
+
+    async configureHealthCheck(
+        userId: number,
+        connectionUuid: string,
+        containerUuid: string,
+        config: {
+            test: string[];
+            interval: number;
+            timeout: number;
+            retries: number;
+            startPeriod: number;
+        }
+    ): Promise<void> {
+        const setupResponse = await this.setupDocker(userId, connectionUuid);
+        if (!setupResponse.isConnected) {
+            throw new ServiceUnavailableException(setupResponse.error);
+        }
+
+        const containerRecord = await this.prismaService.container.findFirst({
+            where: {
+                uuid: containerUuid,
+                connectionId: this.currentConnection.id,
+            },
+        });
+
+        if (!containerRecord) {
+            throw new NotFoundException(`Container with UUID ${containerUuid} not found`);
+        }
+
+        try {
+            await this.prismaService.containerHealthCheck.upsert({
+                where: { containerId: containerRecord.id },
+                create: {
+                    ...config,
+                    containerId: containerRecord.id,
+                    uuid: crypto.randomUUID()
+                },
+                update: config
+            });
+        } catch (error) {
+            throw new Error(`Failed to configure health check: ${error.message}`);
+        }
+    }
+
+    async logContainerEvent(
+        containerUuid: string,
+        action: ContainerAction,
+        status: string,
+        message?: string
+    ): Promise<void> {
+        const containerRecord = await this.prismaService.container.findUnique({
+            where: { uuid: containerUuid }
+        });
+
+        if (!containerRecord) {
+            throw new NotFoundException(`Container with UUID ${containerUuid} not found`);
+        }
+
+        await this.prismaService.containerEvent.create({
+            data: {
+                uuid: crypto.randomUUID(),
+                action,
+                status,
+                message,
+                containerId: containerRecord.id
+            }
+        });
+    }
+
+    async updateContainerRestartPolicy(
+        userId: number,
+        connectionUuid: string,
+        containerUuid: string,
+        restartPolicy: ContainerRestartPolicy
+    ): Promise<void> {
+        const setupResponse = await this.setupDocker(userId, connectionUuid);
+        if (!setupResponse.isConnected) {
+            throw new ServiceUnavailableException(setupResponse.error);
+        }
+
+        const containerRecord = await this.prismaService.container.findFirst({
+            where: {
+                uuid: containerUuid,
+                connectionId: this.currentConnection.id,
+            },
+        });
+
+        if (!containerRecord) {
+            throw new NotFoundException(`Container with UUID ${containerUuid} not found`);
+        }
+
+        try {
+            const container = this.dockerService.getContainer(containerRecord.dockerId);
+            await container.update({ RestartPolicy: { Name: restartPolicy.toLowerCase() } });
+
+            await this.prismaService.container.update({
+                where: { uuid: containerUuid },
+                data: { restartPolicy }
+            });
+        } catch (error) {
+            throw new Error(`Failed to update restart policy: ${error.message}`);
+        }
+    }
+
+    async getContainerEvents(
+        userId: number,
+        connectionUuid: string,
+        containerUuid: string,
+        limit: number = 100
+    ): Promise<any[]> {
+        const containerRecord = await this.prismaService.container.findFirst({
+            where: {
+                uuid: containerUuid,
+                connection: {
+                    uuid: connectionUuid,
+                    userId
+                }
+            }
+        });
+
+        if (!containerRecord) {
+            throw new NotFoundException(`Container with UUID ${containerUuid} not found`);
+        }
+
+        return this.prismaService.containerEvent.findMany({
+            where: { containerId: containerRecord.id },
+            orderBy: { timestamp: 'desc' },
+            take: limit
         });
     }
 }

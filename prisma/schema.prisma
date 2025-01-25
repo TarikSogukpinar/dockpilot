@@ -67,6 +67,44 @@ enum AlertSeverity {
   CRITICAL
 }
 
+enum VolumeDriver {
+  LOCAL
+  NFS
+  CIFS
+  TMPFS
+  BIND
+}
+
+enum VolumeScope {
+  LOCAL
+  GLOBAL
+}
+
+enum ContainerHealthStatus {
+  HEALTHY
+  UNHEALTHY
+  STARTING
+  NONE
+}
+
+enum ContainerRestartPolicy {
+  NO
+  ALWAYS
+  ON_FAILURE
+  UNLESS_STOPPED
+}
+
+enum ContainerAction {
+  START
+  STOP
+  RESTART
+  PAUSE
+  UNPAUSE
+  KILL
+  RENAME
+  UPDATE
+}
+
 model User {
   id                 Int                 @id @default(autoincrement())
   uuid               String              @unique @default(uuid())
@@ -100,6 +138,7 @@ model Connection {
   composeDeployments ComposeDeployment[]
   images             Image[]
   networks           Network[]
+  volumes            Volume[]
 
   @@index([userId])
   @@map("connections")
@@ -112,16 +151,77 @@ model Container {
   name                String
   image               String
   status              ContainerStatus        @default(CREATED)
-  connectionId        Int
-  connection          Connection             @relation(fields: [connectionId], references: [id])
-  createdAt           DateTime               @default(now())
+  healthStatus        ContainerHealthStatus  @default(NONE)
+  restartPolicy       ContainerRestartPolicy @default(NO)
+  restartCount        Int                    @default(0)
+  exitCode            Int?
+  command             String?
+  entrypoint         String?
+  workingDir         String?
+  environment        Json?                  // Environment variables
+  ports              Json?                  // Port mappings
+  volumes            Volume[]               // Mounted volumes
+  networks           Network[]              // Connected networks
+  labels             Json?                  // Container labels
+  healthCheck        ContainerHealthCheck?
+  logs               ContainerLog[]
+  events             ContainerEvent[]
+  metrics            ResourceMetric[]
+  limits             ResourceLimit[]
+  alerts             ResourceAlert[]
+  optimizations      ResourceOptimization[]
+  connectionId       Int
+  connection         Connection             @relation(fields: [connectionId], references: [id])
+  createdAt          DateTime               @default(now())
+  startedAt          DateTime?
+  finishedAt         DateTime?
   composeDeploymentId Int?
-  composeDeployment   ComposeDeployment?     @relation(fields: [composeDeploymentId], references: [id])
-  networks            Network[]
-  metrics             ResourceMetric[]
-  limits              ResourceLimit[]
-  alerts              ResourceAlert[]
-  optimizations       ResourceOptimization[]
+  composeDeployment   ComposeDeployment?    @relation(fields: [composeDeploymentId], references: [id])
+
+  @@index([connectionId])
+  @@index([status])
+  @@map("containers")
+}
+
+model ContainerHealthCheck {
+  id              Int       @id @default(autoincrement())
+  uuid            String    @unique @default(uuid())
+  test            String[]  // Health check command
+  interval        Int       @default(30)    // Seconds between checks
+  timeout         Int       @default(30)    // Seconds to wait for response
+  retries         Int       @default(3)     // Number of retries
+  startPeriod     Int       @default(0)     // Seconds to wait on startup
+  containerId     Int       @unique         // One-to-one relation
+  container       Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
+
+  @@map("container_health_checks")
+}
+
+model ContainerLog {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique @default(uuid())
+  stream      String    // stdout or stderr
+  message     String    @db.Text
+  timestamp   DateTime  @default(now())
+  containerId Int
+  container   Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
+
+  @@index([containerId, timestamp])
+  @@map("container_logs")
+}
+
+model ContainerEvent {
+  id          Int            @id @default(autoincrement())
+  uuid        String         @unique @default(uuid())
+  action      ContainerAction
+  status      String
+  message     String?
+  timestamp   DateTime       @default(now())
+  containerId Int
+  container   Container      @relation(fields: [containerId], references: [id], onDelete: Cascade)
+
+  @@index([containerId, timestamp])
+  @@map("container_events")
 }
 
 model Log {
@@ -323,4 +423,59 @@ model ResourceOptimization {
   updatedAt      DateTime           @updatedAt
 
   @@map("resource_optimizations")
+}
+
+model Volume {
+  id            Int           @id @default(autoincrement())
+  uuid          String        @unique @default(uuid())
+  name          String
+  driver        VolumeDriver  @default(LOCAL)
+  scope         VolumeScope   @default(LOCAL)
+  mountpoint    String?
+  options       Json?         // Driver specific options
+  labels        Json?         // Volume labels
+  size          Int?         // Size in bytes
+  usedSize      Int?         // Used size in bytes
+  status        String?      // Volume status
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  connectionId  Int
+  connection    Connection   @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  containers    Container[]  // Containers using this volume
+  backups       VolumeBackup[]
+  snapshots     VolumeSnapshot[]
+
+  @@index([connectionId])
+  @@map("volumes")
+}
+
+model VolumeBackup {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique @default(uuid())
+  name        String
+  size        Int       // Backup size in bytes
+  status      String    // PENDING, COMPLETED, FAILED
+  location    String    // Backup storage location
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  volumeId    Int
+  volume      Volume    @relation(fields: [volumeId], references: [id], onDelete: Cascade)
+
+  @@index([volumeId])
+  @@map("volume_backups")
+}
+
+model VolumeSnapshot {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique @default(uuid())
+  name        String
+  size        Int       // Snapshot size in bytes
+  status      String    // PENDING, COMPLETED, FAILED
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  volumeId    Int
+  volume      Volume    @relation(fields: [volumeId], references: [id], onDelete: Cascade)
+
+  @@index([volumeId])
+  @@map("volume_snapshots")
 }

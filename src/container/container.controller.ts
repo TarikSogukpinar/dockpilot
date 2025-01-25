@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from "@nestjs/common";
 import { ContainerService } from "./container.service";
-import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiParam } from "@nestjs/swagger";
 import { CustomRequest } from "src/core/request/customRequest";
 import { JwtAuthGuard } from "src/auth/guard/auth.guard";
+import { ContainerRestartPolicy } from '@prisma/client';
 
 @Controller({ path: 'container', version: '1' })
 @ApiTags('Container')
@@ -125,5 +126,92 @@ export class ContainerController {
     ) {
         const userId = customRequest.user.id;
         return this.containerService.getContainerStats(userId, connectionUuid, containerId);
+    }
+
+    @Post(':containerUuid/health-check')
+    @ApiOperation({ summary: 'Configure container health check' })
+    @ApiParam({ name: 'containerUuid', description: 'Container UUID' })
+    async configureHealthCheck(
+        @Req() req: any,
+        @Param('containerUuid') containerUuid: string,
+        @Body() config: {
+            test: string[];
+            interval: number;
+            timeout: number;
+            retries: number;
+            startPeriod: number;
+        }
+    ) {
+        return this.containerService.configureHealthCheck(
+            req.user.id,
+            req.headers.connectionuuid,
+            containerUuid,
+            config
+        );
+    }
+
+    @Get(':containerUuid/health')
+    @ApiOperation({ summary: 'Get container health status' })
+    @ApiParam({ name: 'containerUuid', description: 'Container UUID' })
+    async getContainerHealth(
+        @Req() req: any,
+        @Param('containerUuid') containerUuid: string
+    ) {
+        return this.containerService.updateContainerHealth(
+            req.user.id,
+            req.headers.connectionuuid,
+            containerUuid
+        );
+    }
+
+    @Post(':containerUuid/restart-policy')
+    @ApiOperation({ summary: 'Update container restart policy' })
+    @ApiParam({ name: 'containerUuid', description: 'Container UUID' })
+    async updateRestartPolicy(
+        @Req() req: any,
+        @Param('containerUuid') containerUuid: string,
+        @Body('policy') policy: ContainerRestartPolicy
+    ) {
+        return this.containerService.updateContainerRestartPolicy(
+            req.user.id,
+            req.headers.connectionuuid,
+            containerUuid,
+            policy
+        );
+    }
+
+    @Get(':containerUuid/events')
+    @ApiOperation({ summary: 'Get container events' })
+    @ApiParam({ name: 'containerUuid', description: 'Container UUID' })
+    async getContainerEvents(
+        @Req() req: any,
+        @Param('containerUuid') containerUuid: string,
+        @Query('limit') limit?: number
+    ) {
+        return this.containerService.getContainerEvents(
+            req.user.id,
+            req.headers.connectionuuid,
+            containerUuid,
+            limit
+        );
+    }
+
+    @Get(':containerUuid/logs')
+    @ApiOperation({ summary: 'Get container logs with filtering options' })
+    @ApiParam({ name: 'containerUuid', description: 'Container UUID' })
+    async getFilteredContainerLogs(
+        @Req() req: any,
+        @Param('containerUuid') containerUuid: string,
+        @Query('since') since?: Date,
+        @Query('until') until?: Date,
+        @Query('limit') limit?: number,
+        @Query('stream') stream?: string
+    ) {
+        return this.containerService.getContainerLogs(
+            req.user.id,
+            req.headers.connectionuuid,
+            containerUuid,
+            { since, until, limit, stream }
+        );
     }
 }
