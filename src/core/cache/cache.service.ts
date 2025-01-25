@@ -2,7 +2,6 @@ import { Injectable, Inject } from '@nestjs/common';
 import Redis from 'ioredis';
 import { ICacheServiceInterface } from './cache.interface';
 
-
 @Injectable()
 export class CacheService implements ICacheServiceInterface {
     constructor(

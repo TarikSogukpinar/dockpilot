@@ -50,6 +50,7 @@ model User {
   updatedAt    DateTime     @updatedAt
   connections  Connection[]
   Log          Log[]
+  profile      Profile?
 }
 
 model Connection {
@@ -68,7 +69,7 @@ model Connection {
 model Container {
   id           Int             @id @default(autoincrement())
   uuid         String          @unique @default(uuid())
-  dockerId     String 
+  dockerId     String
   name         String
   image        String
   status       ContainerStatus @default(CREATED)
@@ -95,4 +96,43 @@ model BlacklistedToken {
   @@index([expiresAt])
   @@index([token])
   @@map("blacklistedTokens")
+}
+
+model Profile {
+  id                   Int       @id @default(autoincrement())
+  uuid                 String    @unique @default(uuid())
+  company              String?
+  phone                String?
+  address              String?
+  avatarUrl            String?
+  bio                  String?   @db.Text
+  jobTitle             String?
+  department           String?
+  website              String?
+  github               String?
+  dockerHub            String? // Docker Hub kullanıcı adı
+  defaultRegistryUrl   String? // Varsayılan container registry URL'i
+  defaultImagePrefix   String? // Varsayılan image prefix'i
+  preferredNetwork     String? // Tercih edilen network modu
+  defaultRestartPolicy String? // Varsayılan restart policy
+  totalContainers      Int       @default(0) // Toplam oluşturulan container sayısı
+  activeContainers     Int       @default(0) // Aktif container sayısı
+  totalConnections     Int       @default(0) // Toplam bağlantı sayısı
+  totalImages          Int       @default(0) // Toplam image sayısı
+  diskUsage            Float     @default(0) // Toplam disk kullanımı (GB)
+  emailNotifications   Boolean   @default(true) // Email bildirimleri
+  containerAlerts      Boolean   @default(true) // Container durum bildirimleri
+  resourceAlerts       Boolean   @default(true) // Kaynak kullanım bildirimleri
+  twoFactorEnabled     Boolean   @default(false) // 2FA aktif mi?
+  apiKeyEnabled        Boolean   @default(false) // API Key kullanımı aktif mi?
+  lastSecurityScan     DateTime? // Son güvenlik taraması tarihi
+  theme                String?   @default("light") // UI teması (light/dark)
+  language             String?   @default("en") // Tercih edilen dil
+  timeZone             String?   @default("UTC") // Zaman dilimi
+  lastLogin            DateTime?
+  lastActivity         DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  userId               Int       @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
