@@ -70,8 +70,6 @@ export class ContainerService {
 
 
     async createAndStartContainer(userId: number, connectionUuid: string, options: ContainerCreateOptions): Promise<string> {
-        //const connection = await this.connectionService.getConnectionById(connectionUuid, userId); // Kullanıcının bağlantısını al
-        //this.initializeDocker(connection);
 
         const setupResponse = await this.setupDocker(userId, connectionUuid);
 

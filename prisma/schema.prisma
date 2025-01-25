@@ -36,50 +36,72 @@ enum AccountType {
   PREMIUM
 }
 
+enum NetworkDriver {
+  BRIDGE
+  HOST
+  OVERLAY
+  MACVLAN
+  IPVLAN
+  NONE
+}
+
+enum NetworkScope {
+  LOCAL
+  SWARM
+  GLOBAL
+}
+
 model User {
-  id           Int          @id @default(autoincrement())
-  uuid         String       @unique @default(uuid())
-  email        String       @unique
-  password     String
-  name         String?
-  refreshToken String?
-  accessToken  String?
-  role         Role         @default(USER)
-  accountType  AccountType  @default(FREE)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  connections  Connection[]
-  Log          Log[]
-  profile      Profile?
+  id                 Int                 @id @default(autoincrement())
+  uuid               String              @unique @default(uuid())
+  email              String              @unique
+  password           String
+  name               String?
+  refreshToken       String?
+  accessToken        String?
+  role               Role                @default(USER)
+  accountType        AccountType         @default(FREE)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  connections        Connection[]
+  Log                Log[]
+  profile            Profile?
   composeDeployments ComposeDeployment[]
 }
 
 model Connection {
-  id         Int         @id @default(autoincrement())
-  uuid       String      @unique @default(uuid())
-  host       String // Docker host bilgisi
-  port       Int // Docker port bilgisi
-  tlsConfig  Json? // TLS yapılandırması (isteğe bağlı)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  ownerId    Int // Kullanıcı ID'si
-  owner      User        @relation(fields: [ownerId], references: [id])
-  containers Container[]
+  id                 Int                 @id @default(autoincrement())
+  uuid               String              @unique @default(uuid())
+  name               String
+  host               String
+  port               Int
+  tlsConfig          Json?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  userId             Int
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  containers         Container[]
   composeDeployments ComposeDeployment[]
+  images             Image[]
+  networks           Network[]
+
+  @@index([userId])
+  @@map("connections")
 }
 
 model Container {
-  id           Int             @id @default(autoincrement())
-  uuid         String          @unique @default(uuid())
-  dockerId     String
-  name         String
-  image        String
-  status       ContainerStatus @default(CREATED)
-  connectionId Int
-  connection   Connection      @relation(fields: [connectionId], references: [id])
-  createdAt    DateTime        @default(now())
+  id                  Int                @id @default(autoincrement())
+  uuid                String             @unique @default(uuid())
+  dockerId            String
+  name                String
+  image               String
+  status              ContainerStatus    @default(CREATED)
+  connectionId        Int
+  connection          Connection         @relation(fields: [connectionId], references: [id])
+  createdAt           DateTime           @default(now())
   composeDeploymentId Int?
   composeDeployment   ComposeDeployment? @relation(fields: [composeDeploymentId], references: [id])
+  networks            Network[]
 }
 
 model Log {
@@ -142,21 +164,73 @@ model Profile {
 }
 
 model ComposeDeployment {
-  id                Int         @id @default(autoincrement())
-  uuid              String      @unique @default(uuid())
-  name              String
-  description       String?
-  composeContent    String      @db.Text
-  environmentVars   Json?
-  status           String      @default("PENDING") // PENDING, RUNNING, FAILED, STOPPED
-  connectionId     Int
-  connection       Connection  @relation(fields: [connectionId], references: [id])
-  containers       Container[] // Containers created by this deployment
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-  createdBy        Int
-  user             User        @relation(fields: [createdBy], references: [id])
+  id              Int         @id @default(autoincrement())
+  uuid            String      @unique @default(uuid())
+  name            String
+  description     String?
+  composeContent  String      @db.Text
+  environmentVars Json?
+  status          String      @default("PENDING") // PENDING, RUNNING, FAILED, STOPPED
+  connectionId    Int
+  connection      Connection  @relation(fields: [connectionId], references: [id])
+  containers      Container[] // Containers created by this deployment
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  createdBy       Int
+  user            User        @relation(fields: [createdBy], references: [id])
 
   @@index([connectionId])
   @@index([createdBy])
+}
+
+model Image {
+  id         Int       @id @default(autoincrement())
+  uuid       String    @unique @default(uuid())
+  name       String
+  tag        String    @default("latest")
+  imageId    String // Docker image ID
+  registry   String?
+  size       Int?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  pullCount  Int       @default(0)
+  lastPulled DateTime?
+  digest     String?
+  platform   String?
+  labels     Json? // Store image labels
+
+  // Relations
+  connectionId Int
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@unique([connectionId, imageId])
+  @@index([connectionId])
+  @@index([name, tag])
+  @@map("images")
+}
+
+model Network {
+  id           Int           @id @default(autoincrement())
+  uuid         String        @unique @default(uuid())
+  name         String
+  driver       NetworkDriver @default(BRIDGE)
+  scope        NetworkScope  @default(LOCAL)
+  internal     Boolean       @default(false)
+  attachable   Boolean       @default(true)
+  ingress      Boolean       @default(false)
+  ipam         Json? // IP Address Management configuration
+  options      Json? // Driver specific options
+  labels       Json? // Network labels
+  enableIPv6   Boolean       @default(false)
+  subnet       String? // Subnet in CIDR format
+  gateway      String? // Gateway IP address
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  connectionId Int
+  connection   Connection    @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  containers   Container[] // Containers connected to this network
+
+  @@index([connectionId])
+  @@map("networks")
 }

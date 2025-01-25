@@ -1,12 +1,13 @@
 export interface Connection {
     id: number;
     uuid: string;
+    name: string;
     host: string;
     port: number;
-    ownerId: number;
     tlsConfig?: any;
     createdAt: Date;
     updatedAt: Date;
+    userId: number;
 }
 
 //REFACTOR THIS

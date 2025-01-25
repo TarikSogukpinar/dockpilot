@@ -11,14 +11,15 @@ export class ConnectionService {
                 host,
                 port,
                 tlsConfig,
-                owner: { connect: { id: userId } },
+                userId,
+                name: `Connection-${Date.now()}`
             },
         });
     }
 
     async getConnections(userId: number) {
         return this.prisma.connection.findMany({
-            where: { ownerId: userId },
+            where: { userId },
         });
     }
 
@@ -27,11 +28,14 @@ export class ConnectionService {
             throw new Error('Connection ID is required');
         }
 
-        const connection = await this.prisma.connection.findUnique({
-            where: { uuid: connectionUuid },
+        const connection = await this.prisma.connection.findFirst({
+            where: { 
+                uuid: connectionUuid,
+                userId 
+            },
         });
 
-        if (!connection || connection.ownerId !== userId) {
+        if (!connection) {
             throw new NotFoundException('Connection not found or you do not have access.');
         }
 
@@ -39,11 +43,14 @@ export class ConnectionService {
     }
 
     async updateConnection(id: number, userId: number, data: { host?: string; port?: number; tlsConfig?: any }) {
-        const connection = await this.prisma.connection.findUnique({
-            where: { id },
+        const connection = await this.prisma.connection.findFirst({
+            where: { 
+                id,
+                userId 
+            },
         });
 
-        if (!connection || connection.ownerId !== userId) {
+        if (!connection) {
             throw new NotFoundException('Connection not found or you do not have access.');
         }
 
@@ -54,11 +61,14 @@ export class ConnectionService {
     }
 
     async deleteConnection(id: number, userId: number) {
-        const connection = await this.prisma.connection.findUnique({
-            where: { id },
+        const connection = await this.prisma.connection.findFirst({
+            where: { 
+                id,
+                userId 
+            },
         });
 
-        if (!connection || connection.ownerId !== userId) {
+        if (!connection) {
             throw new NotFoundException('Connection not found or you do not have access.');
         }
 
@@ -74,6 +84,21 @@ export class ConnectionService {
 
         if (!connection) {
             throw new NotFoundException('Connection not found');
+        }
+
+        return connection;
+    }
+
+    async getConnectionByUuid(uuid: string, userId: number) {
+        const connection = await this.prisma.connection.findFirst({
+            where: {
+                uuid,
+                userId
+            }
+        });
+
+        if (!connection) {
+            throw new NotFoundException('Connection not found or access denied');
         }
 
         return connection;

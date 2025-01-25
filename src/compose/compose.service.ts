@@ -145,10 +145,10 @@ export class ComposeService {
 
     private async validatePorts(serviceConfig: any): Promise<void> {
         if (!serviceConfig.ports) return;
-        
+
         for (const portMapping of serviceConfig.ports) {
             const [hostPort, containerPort] = portMapping.split(':').map(p => parseInt(p, 10));
-            
+
             if (!await this.isPortAvailable(hostPort, containerPort)) {
                 throw new BadRequestException(`Port ${hostPort} (host) or ${containerPort} (container) is already in use. Please choose different ports.`);
             }

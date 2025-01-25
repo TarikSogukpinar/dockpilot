@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConnectionModule } from './connection/connection.module';
 import { ComposeModule } from './compose/compose.module';
 import { UserModule } from './user/user.module';
+import { ImageModule } from './image/image.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { UserModule } from './user/user.module';
     ConnectionModule,
     UserModule,
     ComposeModule,
+    ImageModule,
   ],
   controllers: [AppController],
   providers: [AppService],
