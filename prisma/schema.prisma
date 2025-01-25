@@ -51,6 +51,7 @@ model User {
   connections  Connection[]
   Log          Log[]
   profile      Profile?
+  composeDeployments ComposeDeployment[]
 }
 
 model Connection {
@@ -64,6 +65,7 @@ model Connection {
   ownerId    Int // Kullanıcı ID'si
   owner      User        @relation(fields: [ownerId], references: [id])
   containers Container[]
+  composeDeployments ComposeDeployment[]
 }
 
 model Container {
@@ -76,6 +78,8 @@ model Container {
   connectionId Int
   connection   Connection      @relation(fields: [connectionId], references: [id])
   createdAt    DateTime        @default(now())
+  composeDeploymentId Int?
+  composeDeployment   ComposeDeployment? @relation(fields: [composeDeploymentId], references: [id])
 }
 
 model Log {
@@ -135,4 +139,24 @@ model Profile {
   updatedAt            DateTime  @updatedAt
   userId               Int       @unique
   user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ComposeDeployment {
+  id                Int         @id @default(autoincrement())
+  uuid              String      @unique @default(uuid())
+  name              String
+  description       String?
+  composeContent    String      @db.Text
+  environmentVars   Json?
+  status           String      @default("PENDING") // PENDING, RUNNING, FAILED, STOPPED
+  connectionId     Int
+  connection       Connection  @relation(fields: [connectionId], references: [id])
+  containers       Container[] // Containers created by this deployment
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  createdBy        Int
+  user             User        @relation(fields: [createdBy], references: [id])
+
+  @@index([connectionId])
+  @@index([createdBy])
 }

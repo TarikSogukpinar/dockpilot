@@ -66,4 +66,16 @@ export class ConnectionService {
             where: { id },
         });
     }
+
+    async findById(id: number) {
+        const connection = await this.prisma.connection.findUnique({
+            where: { id },
+        });
+
+        if (!connection) {
+            throw new NotFoundException('Connection not found');
+        }
+
+        return connection;
+    }
 }
