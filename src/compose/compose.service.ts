@@ -7,6 +7,7 @@ import { ComposeConfig } from './interfaces/compose-config.interface';
 import { DockerSetupResponse } from '../connection/connection.interface';
 import * as yaml from 'js-yaml';
 import Dockerode from 'dockerode';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class ComposeService {
@@ -98,6 +99,7 @@ export class ComposeService {
         // Create deployment record
         const deployment = await this.prismaService.composeDeployment.create({
             data: {
+                uuid: randomUUID(),
                 name: createComposeDto.name,
                 description: createComposeDto.description,
                 composeContent: createComposeDto.composeContent,
@@ -110,11 +112,11 @@ export class ComposeService {
 
         // Start deployment process
         try {
-            await this.startDeployment(deployment.id);
+            await this.startDeployment(deployment.uuid);
             return deployment;
         } catch (error) {
             await this.prismaService.composeDeployment.update({
-                where: { id: deployment.id },
+                where: { uuid: deployment.uuid },
                 data: { status: 'FAILED' },
             });
             throw error;
@@ -153,9 +155,9 @@ export class ComposeService {
         }
     }
 
-    private async startDeployment(deploymentId: number) {
+    private async startDeployment(uuid: string) {
         const deployment = await this.prismaService.composeDeployment.findUnique({
-            where: { id: deploymentId },
+            where: { uuid },
             include: { connection: true },
         });
 
@@ -207,7 +209,7 @@ export class ComposeService {
 
         // Update deployment status
         await this.prismaService.composeDeployment.update({
-            where: { id: deployment.id },
+            where: { uuid },
             data: { status: 'RUNNING' },
         });
     }
@@ -278,9 +280,9 @@ export class ComposeService {
         });
     }
 
-    async getDeployment(userId: number, deploymentId: number) {
+    async getDeployment(userId: number, uuid: string) {
         const deployment = await this.prismaService.composeDeployment.findUnique({
-            where: { id: deploymentId },
+            where: { uuid },
             include: {
                 containers: true,
                 connection: true,
@@ -309,8 +311,8 @@ export class ComposeService {
         });
     }
 
-    async stopDeployment(userId: number, deploymentId: number) {
-        const deployment = await this.getDeployment(userId, deploymentId);
+    async stopDeployment(userId: number, uuid: string) {
+        const deployment = await this.getDeployment(userId, uuid);
 
         const docker = new Dockerode({
             host: deployment.connection.host,
@@ -338,13 +340,13 @@ export class ComposeService {
         }
 
         return this.prismaService.composeDeployment.update({
-            where: { id: deploymentId },
+            where: { uuid },
             data: { status: 'STOPPED' },
         });
     }
 
-    async deleteDeployment(userId: number, deploymentId: number) {
-        const deployment = await this.getDeployment(userId, deploymentId);
+    async deleteDeployment(userId: number, uuid: string) {
+        const deployment = await this.getDeployment(userId, uuid);
 
         const docker = new Dockerode({
             host: deployment.connection.host,
@@ -368,7 +370,7 @@ export class ComposeService {
         }
 
         return this.prismaService.composeDeployment.delete({
-            where: { id: deploymentId },
+            where: { uuid },
         });
     }
 } 

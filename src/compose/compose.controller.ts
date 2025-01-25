@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Req, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags, ApiConsumes } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Req, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, ParseUUIDPipe } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags, ApiConsumes, ApiParam } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ComposeService } from './compose.service';
 import { CreateComposeDto } from './dto/create-compose.dto';
@@ -51,42 +51,45 @@ export class ComposeController {
         return this.composeService.listDeployments(req.user.id);
     }
 
-    @Get(':id')
+    @Get(':uuid')
     @ApiOperation({ summary: 'Get a specific compose deployment' })
+    @ApiParam({ name: 'uuid', description: 'UUID of the compose deployment' })
     @ApiResponse({
         status: 200,
         description: 'Returns the specified compose deployment',
     })
     async getDeployment(
         @Req() req: CustomRequest,
-        @Param('id') id: string,
+        @Param('uuid', ParseUUIDPipe) uuid: string,
     ) {
-        return this.composeService.getDeployment(req.user.id, +id);
+        return this.composeService.getDeployment(req.user.id, uuid);
     }
 
-    @Post(':id/stop')
+    @Post(':uuid/stop')
     @ApiOperation({ summary: 'Stop a compose deployment' })
+    @ApiParam({ name: 'uuid', description: 'UUID of the compose deployment to stop' })
     @ApiResponse({
         status: 200,
         description: 'The compose deployment has been stopped',
     })
     async stopDeployment(
         @Req() req: CustomRequest,
-        @Param('id') id: string,
+        @Param('uuid', ParseUUIDPipe) uuid: string,
     ) {
-        return this.composeService.stopDeployment(req.user.id, +id);
+        return this.composeService.stopDeployment(req.user.id, uuid);
     }
 
-    @Delete(':id')
+    @Delete(':uuid')
     @ApiOperation({ summary: 'Delete a compose deployment' })
+    @ApiParam({ name: 'uuid', description: 'UUID of the compose deployment to delete' })
     @ApiResponse({
         status: 200,
         description: 'The compose deployment has been deleted',
     })
     async deleteDeployment(
         @Req() req: CustomRequest,
-        @Param('id') id: string,
+        @Param('uuid', ParseUUIDPipe) uuid: string,
     ) {
-        return this.composeService.deleteDeployment(req.user.id, +id);
+        return this.composeService.deleteDeployment(req.user.id, uuid);
     }
 } 
