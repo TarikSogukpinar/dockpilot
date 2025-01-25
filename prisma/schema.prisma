@@ -51,6 +51,22 @@ enum NetworkScope {
   GLOBAL
 }
 
+enum ResourceMetricType {
+  CPU
+  MEMORY
+  DISK_READ
+  DISK_WRITE
+  NETWORK_IN
+  NETWORK_OUT
+  PIDS
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
 model User {
   id                 Int                 @id @default(autoincrement())
   uuid               String              @unique @default(uuid())
@@ -90,18 +106,22 @@ model Connection {
 }
 
 model Container {
-  id                  Int                @id @default(autoincrement())
-  uuid                String             @unique @default(uuid())
+  id                  Int                    @id @default(autoincrement())
+  uuid                String                 @unique @default(uuid())
   dockerId            String
   name                String
   image               String
-  status              ContainerStatus    @default(CREATED)
+  status              ContainerStatus        @default(CREATED)
   connectionId        Int
-  connection          Connection         @relation(fields: [connectionId], references: [id])
-  createdAt           DateTime           @default(now())
+  connection          Connection             @relation(fields: [connectionId], references: [id])
+  createdAt           DateTime               @default(now())
   composeDeploymentId Int?
-  composeDeployment   ComposeDeployment? @relation(fields: [composeDeploymentId], references: [id])
+  composeDeployment   ComposeDeployment?     @relation(fields: [composeDeploymentId], references: [id])
   networks            Network[]
+  metrics             ResourceMetric[]
+  limits              ResourceLimit[]
+  alerts              ResourceAlert[]
+  optimizations       ResourceOptimization[]
 }
 
 model Log {
@@ -233,4 +253,74 @@ model Network {
 
   @@index([connectionId])
   @@map("networks")
+}
+
+model ResourceMetric {
+  id          Int                @id @default(autoincrement())
+  uuid        String             @unique @default(uuid())
+  type        ResourceMetricType
+  value       Float
+  unit        String // MB, GB, %, etc.
+  timestamp   DateTime           @default(now())
+  containerId Int
+  container   Container          @relation(fields: [containerId], references: [id])
+
+  @@index([containerId, timestamp])
+  @@index([type, timestamp])
+  @@map("resource_metrics")
+}
+
+model ResourceLimit {
+  id          Int                @id @default(autoincrement())
+  uuid        String             @unique @default(uuid())
+  type        ResourceMetricType
+  maxValue    Float
+  minValue    Float?
+  softLimit   Float? // Warning threshold
+  hardLimit   Float? // Critical threshold
+  enabled     Boolean            @default(true)
+  containerId Int
+  container   Container          @relation(fields: [containerId], references: [id])
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@unique([containerId, type])
+  @@map("resource_limits")
+}
+
+model ResourceAlert {
+  id          Int                @id @default(autoincrement())
+  uuid        String             @unique @default(uuid())
+  type        ResourceMetricType
+  message     String
+  value       Float
+  threshold   Float
+  severity    AlertSeverity
+  timestamp   DateTime           @default(now())
+  resolved    Boolean            @default(false)
+  resolvedAt  DateTime?
+  containerId Int
+  container   Container          @relation(fields: [containerId], references: [id])
+
+  @@index([containerId, timestamp])
+  @@index([severity, resolved])
+  @@map("resource_alerts")
+}
+
+model ResourceOptimization {
+  id             Int                @id @default(autoincrement())
+  uuid           String             @unique @default(uuid())
+  containerId    Int
+  container      Container          @relation(fields: [containerId], references: [id])
+  suggestion     String
+  impact         String // HIGH, MEDIUM, LOW
+  currentValue   Float?
+  suggestedValue Float?
+  metric         ResourceMetricType
+  implemented    Boolean            @default(false)
+  implementedAt  DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@map("resource_optimizations")
 }

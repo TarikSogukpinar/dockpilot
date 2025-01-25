@@ -10,6 +10,8 @@ import { ConnectionModule } from './connection/connection.module';
 import { ComposeModule } from './compose/compose.module';
 import { UserModule } from './user/user.module';
 import { ImageModule } from './image/image.module';
+import { NetworkModule } from './network/network.module';
+import { ResourceModule } from './resource/resource.module';
 
 @Module({
   imports: [
@@ -35,6 +37,8 @@ import { ImageModule } from './image/image.module';
     UserModule,
     ComposeModule,
     ImageModule,
+    NetworkModule,
+    ResourceModule
   ],
   controllers: [AppController],
   providers: [AppService],
