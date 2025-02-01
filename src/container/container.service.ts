@@ -9,6 +9,7 @@ import { CreateContainerDto } from './dto/requests/createContanier.dto';
 import { CreateContainerResponseDto } from './dto/responses/createContainerResponse.dto';
 import { PullImageDto } from "./dto/requests/pullImage.dto";
 import { PullImageResponseDto } from "./dto/responses/pullImageResponse.dto";
+import { SetupDockerDto } from "./dto/requests/setupDocker.dto";
 
 @Injectable()
 export class ContainerService {
@@ -24,9 +25,9 @@ export class ContainerService {
         });
     }
 
-    private async setupDocker(userId: number, connectionUuid: string): Promise<DockerSetupResponse> {
+    private async setupDocker(setupDockerDto: SetupDockerDto): Promise<DockerSetupResponse> {
         try {
-            const connection = await this.connectionService.getConnectionById(connectionUuid, userId);
+            const connection = await this.connectionService.getConnectionById(setupDockerDto.connectionUuid, setupDockerDto.userId);
             const connectionStatus = await this.connectionChecker.checkConnection(connection);
 
             if (!connectionStatus.isConnected) {
@@ -74,11 +75,10 @@ export class ContainerService {
     }
 
     async createAndStartContainer(
-        userId: number,
-        connectionUuid: string,
+        setupDockerDto: SetupDockerDto,
         createContainerDto: CreateContainerDto
     ): Promise<CreateContainerResponseDto> {
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+        const setupResponse = await this.setupDocker(setupDockerDto);
 
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException();
@@ -120,12 +120,12 @@ export class ContainerService {
                 throw error;
             }
 
-            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
+            throw new InternalServerErrorException("An unexpected error occurred while creating container");
         }
     }
 
-    async listContainers(userId: number, connectionUuid: string): Promise<ContainerInfo[]> {
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+    async listContainers(setupDockerDto: SetupDockerDto): Promise<ContainerInfo[]> {
+        const setupResponse = await this.setupDocker(setupDockerDto);
 
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
@@ -139,9 +139,9 @@ export class ContainerService {
         }
     }
 
-    async stopContainer(userId: number, connectionUuid: string, containerUuid: string): Promise<string> {
+    async stopContainer(setupDockerDto: SetupDockerDto, containerUuid: string): Promise<string> {
         // Kullanıcı bağlantısını doğrula
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+        const setupResponse = await this.setupDocker(setupDockerDto);
 
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
@@ -179,11 +179,11 @@ export class ContainerService {
         }
     }
 
-    private async updateContainerStatus(containerUuid: string, status: string): Promise<void> {
+    private async updateContainerStatus(setupDockerDto: SetupDockerDto, status: string): Promise<void> {
         try {
             // `containerUuid` üzerinden güncelleme
             await this.prismaService.container.update({
-                where: { uuid: containerUuid }, // `uuid` alanını kullanıyoruz
+                where: { uuid: setupDockerDto.connectionUuid }, // `uuid` alanını kullanıyoruz
                 data: { status: ContainerStatus.PAUSED },
             });
         } catch (error) {
@@ -192,8 +192,8 @@ export class ContainerService {
         }
     }
 
-    async removeContainer(userId: number, connectionUuid: string, containerUuid: string): Promise<string> {
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+    async removeContainer(setupDockerDto: SetupDockerDto, containerUuid: string): Promise<string> {
+        const setupResponse = await this.setupDocker(setupDockerDto);
 
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
@@ -229,8 +229,8 @@ export class ContainerService {
         }
     }
 
-    async inspectContainer(userId: number, connectionUuid: string, containerUuid: string): Promise<Docker.ContainerInspectInfo> {
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+    async inspectContainer(setupDockerDto: SetupDockerDto, containerUuid: string): Promise<Docker.ContainerInspectInfo> {
+        const setupResponse = await this.setupDocker(setupDockerDto);
 
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
@@ -260,8 +260,8 @@ export class ContainerService {
         }
     }
 
-    async restartContainer(userId: number, connectionUuid: string, containerUuid: string): Promise<string> {
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+    async restartContainer(setupDockerDto: SetupDockerDto, containerUuid: string): Promise<string> {
+        const setupResponse = await this.setupDocker(setupDockerDto);
 
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
@@ -292,8 +292,7 @@ export class ContainerService {
     }
 
     async getContainerLogs(
-        userId: number,
-        connectionUuid: string,
+        setupDockerDto: SetupDockerDto,
         containerUuid: string,
         options: {
             since?: Date;
@@ -302,7 +301,7 @@ export class ContainerService {
             stream?: string;
         } = {}
     ): Promise<any[]> {
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+        const setupResponse = await this.setupDocker(setupDockerDto);
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
         }
@@ -360,8 +359,8 @@ export class ContainerService {
         }
     }
 
-    async pauseContainer(userId: number, connectionUuid: string, containerUuid: string): Promise<string> {
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+    async pauseContainer(setupDockerDto: SetupDockerDto, containerUuid: string): Promise<string> {
+        const setupResponse = await this.setupDocker(setupDockerDto);
 
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
@@ -398,8 +397,8 @@ export class ContainerService {
         }
     }
 
-    async unpauseContainer(userId: number, connectionUuid: string, containerUuid: string): Promise<string> {
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+    async unpauseContainer(setupDockerDto: SetupDockerDto, containerUuid: string): Promise<string> {
+        const setupResponse = await this.setupDocker(setupDockerDto);
 
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
@@ -436,8 +435,8 @@ export class ContainerService {
         }
     }
 
-    async pruneContainers(userId: number, connectionUuid: string): Promise<string> {
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+    async pruneContainers(setupDockerDto: SetupDockerDto): Promise<string> {
+        const setupResponse = await this.setupDocker(setupDockerDto);
 
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
@@ -466,8 +465,8 @@ export class ContainerService {
         }
     }
 
-    async getContainerStats(userId: number, connectionUuid: string, containerUuid: string): Promise<any> {
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+    async getContainerStats(setupDockerDto: SetupDockerDto, containerUuid: string): Promise<any> {
+        const setupResponse = await this.setupDocker(setupDockerDto);
 
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
@@ -525,8 +524,8 @@ export class ContainerService {
     }
 
     // Lifecycle Management Methods
-    async updateContainerHealth(userId: number, connectionUuid: string, containerUuid: string): Promise<void> {
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+    async updateContainerHealth(setupDockerDto: SetupDockerDto, containerUuid: string): Promise<void> {
+        const setupResponse = await this.setupDocker(setupDockerDto);
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
         }
@@ -576,18 +575,14 @@ export class ContainerService {
     }
 
     async configureHealthCheck(
-        userId: number,
-        connectionUuid: string,
-        containerUuid: string,
-        config: {
+        setupDockerDto: SetupDockerDto, containerUuid: string, connectionUuid: string, config: {
             test: string[];
             interval: number;
             timeout: number;
             retries: number;
             startPeriod: number;
-        }
-    ): Promise<void> {
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+        }): Promise<void> {
+        const setupResponse = await this.setupDocker(setupDockerDto);
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
         }
@@ -644,12 +639,11 @@ export class ContainerService {
     }
 
     async updateContainerRestartPolicy(
-        userId: number,
-        connectionUuid: string,
+        setupDockerDto: SetupDockerDto,
         containerUuid: string,
         restartPolicy: ContainerRestartPolicy
     ): Promise<void> {
-        const setupResponse = await this.setupDocker(userId, connectionUuid);
+        const setupResponse = await this.setupDocker(setupDockerDto);
         if (!setupResponse.isConnected) {
             throw new ServiceUnavailableException(setupResponse.error);
         }

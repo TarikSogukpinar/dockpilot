@@ -154,6 +154,8 @@ model User {
   Log                Log[]
   profile            Profile?
   composeDeployments ComposeDeployment[]
+
+  @@map("users")
 }
 
 model Connection {
@@ -172,9 +174,9 @@ model Connection {
   images             Image[]
   networks           Network[]
   volumes            Volume[]
-  backups            Backup[]            // Relation to backups
-  restores           Restore[]           // Relation to restores
-  backupSchedules    BackupSchedule[]    // Relation to backup schedules
+  backups            Backup[] // Relation to backups
+  restores           Restore[] // Relation to restores
+  backupSchedules    BackupSchedule[] // Relation to backup schedules
 
   @@index([userId])
   @@map("connections")
@@ -192,27 +194,27 @@ model Container {
   restartCount        Int                    @default(0)
   exitCode            Int?
   command             String?
-  entrypoint         String?
-  workingDir         String?
-  environment        Json?                  // Environment variables
-  ports              Json?                  // Port mappings
-  volumes            Volume[]               // Mounted volumes
-  networks           Network[]              // Connected networks
-  labels             Json?                  // Container labels
-  healthCheck        ContainerHealthCheck?
-  logs               ContainerLog[]
-  events             ContainerEvent[]
-  metrics            ResourceMetric[]
-  limits             ResourceLimit[]
-  alerts             ResourceAlert[]
-  optimizations      ResourceOptimization[]
-  connectionId       Int
-  connection         Connection             @relation(fields: [connectionId], references: [id])
-  createdAt          DateTime               @default(now())
-  startedAt          DateTime?
-  finishedAt         DateTime?
+  entrypoint          String?
+  workingDir          String?
+  environment         Json? // Environment variables
+  ports               Json? // Port mappings
+  volumes             Volume[] // Mounted volumes
+  networks            Network[] // Connected networks
+  labels              Json? // Container labels
+  healthCheck         ContainerHealthCheck?
+  logs                ContainerLog[]
+  events              ContainerEvent[]
+  metrics             ResourceMetric[]
+  limits              ResourceLimit[]
+  alerts              ResourceAlert[]
+  optimizations       ResourceOptimization[]
+  connectionId        Int
+  connection          Connection             @relation(fields: [connectionId], references: [id])
+  createdAt           DateTime               @default(now())
+  startedAt           DateTime?
+  finishedAt          DateTime?
   composeDeploymentId Int?
-  composeDeployment   ComposeDeployment?    @relation(fields: [composeDeploymentId], references: [id])
+  composeDeployment   ComposeDeployment?     @relation(fields: [composeDeploymentId], references: [id])
 
   @@index([connectionId])
   @@index([status])
@@ -220,15 +222,15 @@ model Container {
 }
 
 model ContainerHealthCheck {
-  id              Int       @id @default(autoincrement())
-  uuid            String    @unique @default(uuid())
-  test            String[]  // Health check command
-  interval        Int       @default(30)    // Seconds between checks
-  timeout         Int       @default(30)    // Seconds to wait for response
-  retries         Int       @default(3)     // Number of retries
-  startPeriod     Int       @default(0)     // Seconds to wait on startup
-  containerId     Int       @unique         // One-to-one relation
-  container       Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique @default(uuid())
+  test        String[] // Health check command
+  interval    Int       @default(30) // Seconds between checks
+  timeout     Int       @default(30) // Seconds to wait for response
+  retries     Int       @default(3) // Number of retries
+  startPeriod Int       @default(0) // Seconds to wait on startup
+  containerId Int       @unique // One-to-one relation
+  container   Container @relation(fields: [containerId], references: [id], onDelete: Cascade)
 
   @@map("container_health_checks")
 }
@@ -236,7 +238,7 @@ model ContainerHealthCheck {
 model ContainerLog {
   id          Int       @id @default(autoincrement())
   uuid        String    @unique @default(uuid())
-  stream      String    // stdout or stderr
+  stream      String // stdout or stderr
   message     String    @db.Text
   timestamp   DateTime  @default(now())
   containerId Int
@@ -247,14 +249,14 @@ model ContainerLog {
 }
 
 model ContainerEvent {
-  id          Int            @id @default(autoincrement())
-  uuid        String         @unique @default(uuid())
+  id          Int             @id @default(autoincrement())
+  uuid        String          @unique @default(uuid())
   action      ContainerAction
   status      String
   message     String?
-  timestamp   DateTime       @default(now())
+  timestamp   DateTime        @default(now())
   containerId Int
-  container   Container      @relation(fields: [containerId], references: [id], onDelete: Cascade)
+  container   Container       @relation(fields: [containerId], references: [id], onDelete: Cascade)
 
   @@index([containerId, timestamp])
   @@map("container_events")
@@ -267,6 +269,10 @@ model Log {
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
   serverId  Int
+
+  @@index([userId])
+  @@index([serverId])
+  @@map("logs")
 }
 
 model BlacklistedToken {
@@ -317,6 +323,9 @@ model Profile {
   updatedAt            DateTime  @updatedAt
   userId               Int       @unique
   user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("profiles")
 }
 
 model ComposeDeployment {
@@ -337,6 +346,7 @@ model ComposeDeployment {
 
   @@index([connectionId])
   @@index([createdBy])
+  @@map("compose_deployments")
 }
 
 model Image {
@@ -462,24 +472,24 @@ model ResourceOptimization {
 }
 
 model Volume {
-  id            Int           @id @default(autoincrement())
-  uuid          String        @unique @default(uuid())
-  name          String
-  driver        VolumeDriver  @default(LOCAL)
-  scope         VolumeScope   @default(LOCAL)
-  mountpoint    String?
-  options       Json?         // Driver specific options
-  labels        Json?         // Volume labels
-  size          Int?         // Size in bytes
-  usedSize      Int?         // Used size in bytes
-  status        String?      // Volume status
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  connectionId  Int
-  connection    Connection   @relation(fields: [connectionId], references: [id], onDelete: Cascade)
-  containers    Container[]  // Containers using this volume
-  backups       VolumeBackup[]
-  snapshots     VolumeSnapshot[]
+  id           Int              @id @default(autoincrement())
+  uuid         String           @unique @default(uuid())
+  name         String
+  driver       VolumeDriver     @default(LOCAL)
+  scope        VolumeScope      @default(LOCAL)
+  mountpoint   String?
+  options      Json? // Driver specific options
+  labels       Json? // Volume labels
+  size         Int? // Size in bytes
+  usedSize     Int? // Used size in bytes
+  status       String? // Volume status
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  connectionId Int
+  connection   Connection       @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  containers   Container[] // Containers using this volume
+  backups      VolumeBackup[]
+  snapshots    VolumeSnapshot[]
 
   @@index([connectionId])
   @@map("volumes")
@@ -489,9 +499,9 @@ model VolumeBackup {
   id          Int       @id @default(autoincrement())
   uuid        String    @unique @default(uuid())
   name        String
-  size        Int       // Backup size in bytes
-  status      String    // PENDING, COMPLETED, FAILED
-  location    String    // Backup storage location
+  size        Int // Backup size in bytes
+  status      String // PENDING, COMPLETED, FAILED
+  location    String // Backup storage location
   createdAt   DateTime  @default(now())
   completedAt DateTime?
   volumeId    Int
@@ -505,8 +515,8 @@ model VolumeSnapshot {
   id          Int       @id @default(autoincrement())
   uuid        String    @unique @default(uuid())
   name        String
-  size        Int       // Snapshot size in bytes
-  status      String    // PENDING, COMPLETED, FAILED
+  size        Int // Snapshot size in bytes
+  status      String // PENDING, COMPLETED, FAILED
   createdAt   DateTime  @default(now())
   completedAt DateTime?
   volumeId    Int
@@ -526,32 +536,32 @@ model Backup {
   status          BackupStatus      @default(PENDING)
   storageType     BackupStorageType
   storageLocation String
-  size            Int              // Size in bytes
-  checksum        String?          // For integrity verification
-  compression     Boolean          @default(true)
-  encrypted       Boolean          @default(false)
-  encryptionKey   String?         // Encrypted storage of backup key
-  retentionDays   Int             @default(30)
-  
+  size            Int // Size in bytes
+  checksum        String? // For integrity verification
+  compression     Boolean           @default(true)
+  encrypted       Boolean           @default(false)
+  encryptionKey   String? // Encrypted storage of backup key
+  retentionDays   Int               @default(30)
+
   // Backup contents
-  containerIds    String[]        // List of container IDs included
-  volumeIds       String[]        // List of volume IDs included
-  networkIds      String[]        // List of network IDs included
-  
+  containerIds String[] // List of container IDs included
+  volumeIds    String[] // List of volume IDs included
+  networkIds   String[] // List of network IDs included
+
   // Metadata
-  metadata        Json?           // Additional backup metadata
-  tags            String[]        // For organization and filtering
-  
+  metadata Json? // Additional backup metadata
+  tags     String[] // For organization and filtering
+
   // Timestamps
-  startedAt       DateTime        @default(now())
-  completedAt     DateTime?
-  lastVerifiedAt  DateTime?
-  
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+  lastVerifiedAt DateTime?
+
   // Relations
-  connectionId    Int
-  connection      Connection      @relation(fields: [connectionId], references: [id])
-  restores        Restore[]      // Restore operations from this backup
-  
+  connectionId Int
+  connection   Connection @relation(fields: [connectionId], references: [id])
+  restores     Restore[] // Restore operations from this backup
+
   // Indexes
   @@index([connectionId])
   @@index([type, status])
@@ -560,31 +570,31 @@ model Backup {
 }
 
 model Restore {
-  id              Int            @id @default(autoincrement())
-  uuid            String         @unique @default(uuid())
-  name            String
-  description     String?
-  status          RestoreStatus  @default(PENDING)
-  
+  id          Int           @id @default(autoincrement())
+  uuid        String        @unique @default(uuid())
+  name        String
+  description String?
+  status      RestoreStatus @default(PENDING)
+
   // Restore configuration
-  targetEnv       String?        // Target environment for restore
-  overwriteExisting Boolean     @default(false)
-  selectedItems   Json?         // Specific items to restore
-  
+  targetEnv         String? // Target environment for restore
+  overwriteExisting Boolean @default(false)
+  selectedItems     Json? // Specific items to restore
+
   // Results
-  restoredItems   Json?         // Successfully restored items
-  errorLog        String?       // Detailed error information
-  
+  restoredItems Json? // Successfully restored items
+  errorLog      String? // Detailed error information
+
   // Timestamps
-  startedAt       DateTime      @default(now())
-  completedAt     DateTime?
-  
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
   // Relations
-  backupId        Int
-  backup          Backup        @relation(fields: [backupId], references: [id])
-  connectionId    Int
-  connection      Connection    @relation(fields: [connectionId], references: [id])
-  
+  backupId     Int
+  backup       Backup     @relation(fields: [backupId], references: [id])
+  connectionId Int
+  connection   Connection @relation(fields: [connectionId], references: [id])
+
   // Indexes
   @@index([backupId])
   @@index([connectionId])
@@ -593,39 +603,39 @@ model Restore {
 }
 
 model BackupSchedule {
-  id              Int           @id @default(autoincrement())
-  uuid            String        @unique @default(uuid())
-  name            String
-  description     String?
-  enabled         Boolean       @default(true)
-  
+  id          Int     @id @default(autoincrement())
+  uuid        String  @unique @default(uuid())
+  name        String
+  description String?
+  enabled     Boolean @default(true)
+
   // Schedule configuration
-  cronExpression  String        // When to run the backup
-  backupType      BackupType
-  retention       Int          @default(30) // Days to keep backups
-  
+  cronExpression String // When to run the backup
+  backupType     BackupType
+  retention      Int        @default(30) // Days to keep backups
+
   // Backup settings
-  compression     Boolean       @default(true)
-  encryption      Boolean       @default(false)
-  storageType     BackupStorageType
-  storageConfig   Json?        // Storage-specific configuration
-  
+  compression   Boolean           @default(true)
+  encryption    Boolean           @default(false)
+  storageType   BackupStorageType
+  storageConfig Json? // Storage-specific configuration
+
   // What to backup
-  includeContainers Boolean    @default(true)
-  includeVolumes    Boolean    @default(true)
-  includeNetworks   Boolean    @default(true)
-  specificItems     Json?      // Specific items to backup
-  
+  includeContainers Boolean @default(true)
+  includeVolumes    Boolean @default(true)
+  includeNetworks   Boolean @default(true)
+  specificItems     Json? // Specific items to backup
+
   // Relations
-  connectionId    Int
-  connection      Connection   @relation(fields: [connectionId], references: [id])
-  
+  connectionId Int
+  connection   Connection @relation(fields: [connectionId], references: [id])
+
   // Timestamps
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  lastRunAt       DateTime?
-  nextRunAt       DateTime?
-  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  lastRunAt DateTime?
+  nextRunAt DateTime?
+
   // Indexes
   @@index([connectionId])
   @@index([enabled])

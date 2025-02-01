@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { HttpException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../database/database.service';
 import { TokenService } from '../core/token/token.service';
 import { User } from '@prisma/client';
@@ -46,10 +46,11 @@ export class AuthService {
 
             return { uuid: user.uuid, email: user.email, role: user.role };
         } catch (error) {
-            console.log(error);
-            throw new InternalServerErrorException(
-                'An error occurred, please try again later',
-            );
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
         }
     }
 
@@ -88,10 +89,11 @@ export class AuthService {
                 email: user.email,
             };
         } catch (error) {
-            console.log(error);
-            throw new InternalServerErrorException(
-                'An error occurred, please try again later',
-            );
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
         }
     }
 
@@ -115,10 +117,11 @@ export class AuthService {
 
             return { message: 'Logout successful' };
         } catch (error) {
-            console.log(error);
-            throw new InternalServerErrorException(
-                'An error occurred, please try again later',
-            );
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
         }
     }
 
@@ -158,10 +161,11 @@ export class AuthService {
 
             return user;
         } catch (error) {
-            console.log(error);
-            throw new InternalServerErrorException(
-                'An error occurred, please try again later',
-            );
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
         }
     }
 
@@ -182,10 +186,11 @@ export class AuthService {
                 expiresIn: process.env.JWT_EXPIRES_IN,
             });
         } catch (error) {
-            console.log(error);
-            throw new InternalServerErrorException(
-                'An error occurred, please try again later',
-            );
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
         }
     }
 }
