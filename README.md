@@ -9,6 +9,7 @@ DockPilot is a comprehensive container management platform that provides robust 
 ## Features
 
 - 🔐 Authentication System
+
   - Local authentication (email/password)
   - OAuth2 integration (GitHub, Google)
   - JWT-based authentication
@@ -17,6 +18,7 @@ DockPilot is a comprehensive container management platform that provides robust 
   - Session management
 
 - 👤 User Management
+
   - User profiles with customizable settings
   - Password management
   - Email updates
@@ -24,6 +26,7 @@ DockPilot is a comprehensive container management platform that provides robust 
   - User preferences (theme, language, timezone)
 
 - 🐳 Container Management
+
   - Container operations and monitoring
   - Connection management
   - Container health checks
@@ -113,6 +116,7 @@ Once the application is running, you can access the Swagger documentation at:
 `http://localhost:{PORT}/docs`
 
 The API documentation includes:
+
 - Detailed endpoint descriptions
 - Request/response schemas
 - Authentication requirements
@@ -142,3 +146,126 @@ npm run test:cov
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Project Structure
+
+DockPilot follows a modular architecture pattern, with each module handling specific functionality:
+
+### Core Modules
+
+- **Auth Module** (`src/auth/`)
+
+  - Handles user authentication and authorization
+  - Implements local and OAuth2 strategies
+  - Manages JWT token generation and validation
+  - Handles user session management
+
+- **User Module** (`src/user/`)
+
+  - Manages user profiles and preferences
+  - Handles user CRUD operations
+  - Implements user settings management
+
+- **Container Module** (`src/container/`)
+  - Core container management functionality
+  - Container lifecycle operations (create, start, stop, remove)
+  - Container monitoring and health checks
+  - Container configuration management
+
+### Docker Management Modules
+
+- **Image Module** (`src/image/`)
+
+  - Docker image management
+  - Image pulling and pushing
+  - Image tagging and versioning
+  - Image cleanup and maintenance
+
+- **Volume Module** (`src/volume/`)
+
+  - Docker volume operations
+  - Volume creation and mounting
+  - Volume backup and restore
+  - Volume cleanup
+
+- **Network Module** (`src/network/`)
+
+  - Docker network management
+  - Network creation and configuration
+  - Container network connectivity
+  - Network isolation and security
+
+- **Compose Module** (`src/compose/`)
+  - Docker Compose operations
+  - Multi-container application deployment
+  - Service orchestration
+  - Environment management
+
+### Infrastructure Modules
+
+- **Connection Module** (`src/connection/`)
+
+  - Docker daemon connection management
+  - Remote Docker host connectivity
+  - Connection pooling and health checks
+
+- **Resource Module** (`src/resource/`)
+
+  - Resource monitoring and metrics
+  - Resource allocation management
+  - Usage statistics and reporting
+
+- **Backup Module** (`src/backup/`)
+  - Container and volume backup strategies
+  - Backup scheduling and automation
+  - Restore operations
+  - Backup retention policies
+
+### Core Infrastructure
+
+- **Core Module** (`src/core/`)
+
+  - Global exception handling
+  - Caching mechanisms
+  - Common utilities and helpers
+  - Shared interfaces and types
+
+- **Database Module** (`src/database/`)
+
+  - Database connection management
+  - Prisma ORM configuration
+  - Migration management
+  - Database utilities
+
+- **Utils Module** (`src/utils/`)
+  - Shared utility functions
+  - Helper classes
+  - Common constants
+  - Type definitions
+
+Each module follows SOLID principles and maintains its own:
+
+- Controllers for handling HTTP requests
+- Services for business logic
+- DTOs for data validation
+- Interfaces for type definitions
+- Unit and integration tests
+
+## Module Dependencies
+
+```
+app.module
+├── auth.module
+├── user.module
+├── container.module
+│   ├── image.module
+│   ├── volume.module
+│   ├── network.module
+│   └── compose.module
+├── connection.module
+├── resource.module
+├── backup.module
+└── core.module
+    ├── cache.module
+    └── database.module
+```
