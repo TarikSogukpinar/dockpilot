@@ -1,9 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query, Req, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
 import { ContainerService } from "./container.service";
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiParam } from "@nestjs/swagger";
 import { CustomRequest } from "src/core/request/customRequest";
 import { JwtAuthGuard } from "src/auth/guard/auth.guard";
 import { ContainerRestartPolicy } from '@prisma/client';
+import { CreateContainerDto } from "./dto/requests/createContanier.dto";
+import { CreateContainerResponseDto } from "./dto/responses/createContainerResponse.dto";
 
 @Controller({ path: 'container', version: '1' })
 @ApiTags('Container')
@@ -12,14 +14,23 @@ export class ContainerController {
     constructor(private readonly containerService: ContainerService) { }
 
     @Post(':connectionUuid/create')
+    @ApiOperation({ summary: 'Create a new container' })
+    @ApiResponse({
+        status: 200,
+        description: 'Container created successfully',
+        type: CreateContainerResponseDto
+    })
+    @UsePipes(new ValidationPipe({ transform: true }))
     @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
     async createContainer(
         @Req() customRequest: CustomRequest,
         @Param('connectionUuid') connectionUuid: string,
-        @Body() options: any,
-    ) {
+        @Body() createContainerDto: CreateContainerDto,
+    ): Promise<CreateContainerResponseDto> {
         const userId = customRequest.user.id;
-        return this.containerService.createAndStartContainer(userId, connectionUuid, options);
+        const result = await this.containerService.createAndStartContainer(userId, connectionUuid, createContainerDto);
+        return result;
     }
 
     @Get(':connectionUuid')

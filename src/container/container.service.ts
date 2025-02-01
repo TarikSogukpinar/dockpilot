@@ -1,10 +1,14 @@
-import { Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
+import { HttpException, Injectable, InternalServerErrorException, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { ContainerStatus, ContainerHealthStatus, ContainerRestartPolicy, ContainerAction } from "@prisma/client";
 import Docker, { ContainerCreateOptions, ContainerInfo } from 'dockerode';
 import { ConnectionChecker } from "src/connection/connection.checker";
 import { Connection, DockerSetupResponse } from "src/connection/connection.interface";
 import { ConnectionService } from "src/connection/connection.service";
 import { PrismaService } from "src/database/database.service";
+import { CreateContainerDto } from './dto/requests/createContanier.dto';
+import { CreateContainerResponseDto } from './dto/responses/createContainerResponse.dto';
+import { PullImageDto } from "./dto/requests/pullImage.dto";
+import { PullImageResponseDto } from "./dto/responses/pullImageResponse.dto";
 
 @Injectable()
 export class ContainerService {
@@ -69,37 +73,54 @@ export class ContainerService {
         }
     }
 
-
-    async createAndStartContainer(userId: number, connectionUuid: string, options: ContainerCreateOptions): Promise<string> {
-
+    async createAndStartContainer(
+        userId: number,
+        connectionUuid: string,
+        createContainerDto: CreateContainerDto
+    ): Promise<CreateContainerResponseDto> {
         const setupResponse = await this.setupDocker(userId, connectionUuid);
 
         if (!setupResponse.isConnected) {
-            throw new ServiceUnavailableException(setupResponse.error);
+            throw new ServiceUnavailableException();
         }
 
         try {
-            await this.pullImage(options.Image);
-            const container = await this.dockerService.createContainer(options);
+            const dockerOptions: ContainerCreateOptions = {
+                Image: createContainerDto.Image,
+                name: createContainerDto.name
+            };
+
+            await this.pullImage(dockerOptions.Image);
+            const container = await this.dockerService.createContainer(dockerOptions);
             await container.start();
 
-            const dockerId = container.id;
-
-            await this.prismaService.container.create({
+            const createdContainer = await this.prismaService.container.create({
                 data: {
-                    name: options.name,
-                    image: options.Image,
-                    status: ContainerStatus.CREATED, // Başlatıldığı için durum "running" olarak kaydedilir
+                    name: createContainerDto.name,
+                    image: createContainerDto.Image,
+                    status: ContainerStatus.RUNNING,
                     connectionId: this.currentConnection.id,
-                    //connectionId: connection.id, // Bağlantı ID'si
-                    dockerId: dockerId, // Docker'dan alınan benzersiz ID
-                },
+                    dockerId: container.id,
+                }
             });
 
-            return `Container ${container.id} created and started successfully.`;
+            return {
+                status: 200,
+                message: 'Container created successfully',
+                data: {
+                    id: createdContainer.id.toString(),
+                    name: createdContainer.name,
+                    status: createdContainer.status,
+                    dockerId: createdContainer.dockerId,
+                    createdAt: createdContainer.createdAt
+                }
+            };
         } catch (error) {
-            console.error(error);
-            throw new Error(`Failed to create and start container: ${error.message}`);
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
         }
     }
 
@@ -222,8 +243,6 @@ export class ContainerService {
                 connectionId: this.currentConnection.id,
             },
         });
-
-
 
         if (!containerRecord) {
             throw new Error(`Container with UUID ${containerUuid} not found for the given connection.`);
@@ -483,9 +502,9 @@ export class ContainerService {
         }
     }
 
-    private async pullImage(image: string): Promise<void> {
+    private async pullImage(pullImageDto: PullImageDto): Promise<PullImageResponseDto> {
         return new Promise((resolve, reject) => {
-            this.dockerService.pull(image, (err, stream) => {
+            this.dockerService.pull(pullImageDto, (err, stream) => {
                 if (err) {
                     return reject(err);
                 }
@@ -495,7 +514,7 @@ export class ContainerService {
                     if (err) {
                         return reject(err);
                     }
-                    resolve();
+                    resolve(void 0);
                 }
 
                 function onProgress(event) {

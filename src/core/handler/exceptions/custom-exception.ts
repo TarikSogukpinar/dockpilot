@@ -35,3 +35,9 @@ export class InvalidTokenException extends HttpException {
         super('Invalid token', HttpStatus.UNAUTHORIZED);
     }
 }
+
+export class ServiceUnavailableException extends HttpException {
+    constructor() {
+        super('Service unavailable', HttpStatus.SERVICE_UNAVAILABLE);
+    }
+}
