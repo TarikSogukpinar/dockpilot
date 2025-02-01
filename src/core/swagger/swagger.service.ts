@@ -5,14 +5,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 export class SwaggerService {
     setupSwagger(app: INestApplication) {
         const config = new DocumentBuilder()
-            .setTitle('E-commerce MonoRepo Boilerplate API v.1.0.0')
-            .setDescription('E-commerce MonoRepo Boilerplate API Documentation')
+            .setTitle('Dockpilot v.1.0.0')
+            .setDescription('Dockpilot API Documentation')
             .setVersion('1.0')
             .addBearerAuth(
                 { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
                 'access-token',
             )
-            .addTag('E-commerce MonoRepo')
+            .addTag('Dockpilot API')
             .build();
 
         const document = SwaggerModule.createDocument(app, config);

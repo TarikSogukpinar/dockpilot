@@ -6,7 +6,7 @@ import { ConnectionModule } from '../connection/connection.module';
 import { ConnectionChecker } from '../connection/connection.checker';
 
 @Module({
-    imports: [PrismaModule, ConnectionModule],
+    imports: [ConnectionModule, PrismaModule],
     controllers: [VolumeController],
     providers: [VolumeService, ConnectionChecker],
     exports: [VolumeService],

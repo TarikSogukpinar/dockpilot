@@ -12,6 +12,8 @@ import { UserModule } from './user/user.module';
 import { ImageModule } from './image/image.module';
 import { NetworkModule } from './network/network.module';
 import { ResourceModule } from './resource/resource.module';
+import { BackupModule } from './backup/backup.module';
+import { VolumeModule } from './volume/volume.module';
 
 @Module({
   imports: [
@@ -38,7 +40,9 @@ import { ResourceModule } from './resource/resource.module';
     ComposeModule,
     ImageModule,
     NetworkModule,
-    ResourceModule
+    ResourceModule,
+    BackupModule,
+    VolumeModule
   ],
   controllers: [AppController],
   providers: [AppService],

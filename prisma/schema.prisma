@@ -105,6 +105,39 @@ enum ContainerAction {
   UPDATE
 }
 
+// Backup related enums
+enum BackupType {
+  FULL
+  INCREMENTAL
+  SNAPSHOT
+}
+
+enum BackupStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  VERIFIED
+  CORRUPTED
+}
+
+enum BackupStorageType {
+  LOCAL
+  S3
+  AZURE_BLOB
+  GOOGLE_CLOUD
+  FTP
+  SFTP
+}
+
+enum RestoreStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  VALIDATED
+}
+
 model User {
   id                 Int                 @id @default(autoincrement())
   uuid               String              @unique @default(uuid())
@@ -139,6 +172,9 @@ model Connection {
   images             Image[]
   networks           Network[]
   volumes            Volume[]
+  backups            Backup[]            // Relation to backups
+  restores           Restore[]           // Relation to restores
+  backupSchedules    BackupSchedule[]    // Relation to backup schedules
 
   @@index([userId])
   @@map("connections")
@@ -478,4 +514,120 @@ model VolumeSnapshot {
 
   @@index([volumeId])
   @@map("volume_snapshots")
+}
+
+// Backup and Restore models
+model Backup {
+  id              Int               @id @default(autoincrement())
+  uuid            String            @unique @default(uuid())
+  name            String
+  description     String?
+  type            BackupType
+  status          BackupStatus      @default(PENDING)
+  storageType     BackupStorageType
+  storageLocation String
+  size            Int              // Size in bytes
+  checksum        String?          // For integrity verification
+  compression     Boolean          @default(true)
+  encrypted       Boolean          @default(false)
+  encryptionKey   String?         // Encrypted storage of backup key
+  retentionDays   Int             @default(30)
+  
+  // Backup contents
+  containerIds    String[]        // List of container IDs included
+  volumeIds       String[]        // List of volume IDs included
+  networkIds      String[]        // List of network IDs included
+  
+  // Metadata
+  metadata        Json?           // Additional backup metadata
+  tags            String[]        // For organization and filtering
+  
+  // Timestamps
+  startedAt       DateTime        @default(now())
+  completedAt     DateTime?
+  lastVerifiedAt  DateTime?
+  
+  // Relations
+  connectionId    Int
+  connection      Connection      @relation(fields: [connectionId], references: [id])
+  restores        Restore[]      // Restore operations from this backup
+  
+  // Indexes
+  @@index([connectionId])
+  @@index([type, status])
+  @@index([startedAt])
+  @@map("backups")
+}
+
+model Restore {
+  id              Int            @id @default(autoincrement())
+  uuid            String         @unique @default(uuid())
+  name            String
+  description     String?
+  status          RestoreStatus  @default(PENDING)
+  
+  // Restore configuration
+  targetEnv       String?        // Target environment for restore
+  overwriteExisting Boolean     @default(false)
+  selectedItems   Json?         // Specific items to restore
+  
+  // Results
+  restoredItems   Json?         // Successfully restored items
+  errorLog        String?       // Detailed error information
+  
+  // Timestamps
+  startedAt       DateTime      @default(now())
+  completedAt     DateTime?
+  
+  // Relations
+  backupId        Int
+  backup          Backup        @relation(fields: [backupId], references: [id])
+  connectionId    Int
+  connection      Connection    @relation(fields: [connectionId], references: [id])
+  
+  // Indexes
+  @@index([backupId])
+  @@index([connectionId])
+  @@index([status])
+  @@map("restores")
+}
+
+model BackupSchedule {
+  id              Int           @id @default(autoincrement())
+  uuid            String        @unique @default(uuid())
+  name            String
+  description     String?
+  enabled         Boolean       @default(true)
+  
+  // Schedule configuration
+  cronExpression  String        // When to run the backup
+  backupType      BackupType
+  retention       Int          @default(30) // Days to keep backups
+  
+  // Backup settings
+  compression     Boolean       @default(true)
+  encryption      Boolean       @default(false)
+  storageType     BackupStorageType
+  storageConfig   Json?        // Storage-specific configuration
+  
+  // What to backup
+  includeContainers Boolean    @default(true)
+  includeVolumes    Boolean    @default(true)
+  includeNetworks   Boolean    @default(true)
+  specificItems     Json?      // Specific items to backup
+  
+  // Relations
+  connectionId    Int
+  connection      Connection   @relation(fields: [connectionId], references: [id])
+  
+  // Timestamps
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  lastRunAt       DateTime?
+  nextRunAt       DateTime?
+  
+  // Indexes
+  @@index([connectionId])
+  @@index([enabled])
+  @@map("backup_schedules")
 }

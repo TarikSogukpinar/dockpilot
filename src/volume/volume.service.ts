@@ -192,7 +192,7 @@ export class VolumeService {
 
         try {
             const pruneResult = await this.docker.pruneVolumes();
-            
+
             // Remove pruned volumes from database
             if (pruneResult.VolumesDeleted) {
                 await this.prisma.volume.deleteMany({
