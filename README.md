@@ -61,13 +61,13 @@ git clone https://github.com/TarikSogukpinar/dockpilot.git
 cd dockpilot
 
 # Install dependencies
-npm install
+pnpm install
 
 # Set up environment variables
 cp .env.example .env
 
 # Run database migrations
-npx prisma migrate dev
+pnpm dlx prisma migrate dev
 ```
 
 ## Environment Configuration
@@ -125,14 +125,40 @@ Each environment variable serves a specific purpose:
 ## Running the Application
 
 ```bash
-# Development mode
-npm run start:dev
+# Development mode with auto-reload and Prisma generation
+pnpm dev
+
+# Development mode with watch
+pnpm start:dev
+
+# Debug mode
+pnpm start:debug
 
 # Production mode
-npm run start:prod
+pnpm start:prod
 
-# With clustering enabled
-CLUSTERING=true npm run start:prod
+# Database Migration (Development)
+pnpm migrate:dev
+
+# Format code
+pnpm format
+
+# Lint code
+pnpm lint
+```
+
+### Additional Commands
+
+```bash
+# Build the application
+pnpm build
+
+# Run tests
+pnpm test                 # Run all tests
+pnpm test:watch          # Run tests in watch mode
+pnpm test:cov           # Generate test coverage
+pnpm test:debug         # Debug tests
+pnpm test:e2e          # Run end-to-end tests
 ```
 
 ## API Documentation
@@ -151,13 +177,13 @@ The API documentation includes:
 
 ```bash
 # Run unit tests
-npm run test
+pnpm test
 
 # Run e2e tests
-npm run test:e2e
+pnpm test:e2e
 
 # Generate test coverage
-npm run test:cov
+pnpm test:cov
 ```
 
 ## Contributing
