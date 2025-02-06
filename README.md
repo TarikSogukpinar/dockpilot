@@ -75,27 +75,52 @@ npx prisma migrate dev
 Create a `.env` file in the root directory with the following variables:
 
 ```env
-# API Configuration
-API_PORT=3000
+# Node and API Configuration
+NODE_ENV=development
+CLUSTERING=false
+API_PORT=5000
 API_GLOBAL_PREFIX=api
 
 # Database Configuration
-DATABASE_URL="postgresql://user:password@localhost:5432/dockpilot"
+DATABASE_URL="postgresql://admin:admin@localhost:5432/mydb"
+
+# JWT Configuration
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=7d
+JWT_REFRESH_SECRET=your_refresh_secret
+JWT_REFRESH_EXPIRES_IN=30d
+
+# GitHub OAuth Configuration
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+GITHUB_CALLBACK_URL=http://localhost:5000/api/auth/github/callback
+GITHUB_EMAILS_URL=https://api.github.com/user/emails
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
 
 # Redis Configuration
 REDIS_HOST=localhost
 REDIS_PORT=6379
-
-# JWT Configuration
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRES_IN=1d
-
-# OAuth Configuration
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
+REDIS_TTL=3600
 ```
+
+Each environment variable serves a specific purpose:
+
+- `NODE_ENV`: Defines the environment (development/production)
+- `CLUSTERING`: Enables/disables application clustering
+- `API_PORT`: The port number for the API server
+- `API_GLOBAL_PREFIX`: Global prefix for all API endpoints
+- `DATABASE_URL`: PostgreSQL connection string
+- `JWT_SECRET`: Secret key for JWT token generation
+- `JWT_EXPIRES_IN`: JWT token expiration time
+- `JWT_REFRESH_SECRET`: Secret key for refresh token
+- `JWT_REFRESH_EXPIRES_IN`: Refresh token expiration time
+- `GITHUB_*`: GitHub OAuth configuration
+- `GOOGLE_*`: Google OAuth configuration
+- `REDIS_*`: Redis cache configuration
 
 ## Running the Application
 
@@ -269,3 +294,53 @@ app.module
     ├── cache.module
     └── database.module
 ```
+
+## Share on LinkedIn
+
+Here's a template for sharing DockPilot on LinkedIn:
+
+```
+🚀 Excited to announce DockPilot - An Open Source Container Management Platform! 
+
+🔥 Key Features:
+• Modern Docker container management with NestJS
+• Enterprise-grade authentication system
+• Multi-container orchestration
+• Real-time monitoring and logging
+• Scalable and production-ready architecture
+
+🛠️ Tech Stack:
+• NestJS
+• TypeScript
+• PostgreSQL
+• Redis
+• Docker
+• OAuth2
+
+🔐 Security Features:
+• JWT Authentication
+• OAuth2 Integration
+• Role-based Access Control
+• Rate Limiting
+• Advanced Security Headers
+
+🌟 Why DockPilot?
+• Production-ready container management
+• Enterprise-grade security
+• Scalable architecture
+• Comprehensive documentation
+• Active community
+
+🔗 GitHub Repository: [Your Repository Link]
+
+#OpenSource #Docker #NestJS #DevOps #ContainerManagement #TypeScript #WebDevelopment #GitHub #Programming
+
+Join us in making container management better! Star ⭐ the repository, contribute, or share your feedback.
+```
+
+### Tips for LinkedIn Announcement:
+1. Add relevant screenshots or demo GIFs
+2. Tag relevant technology communities
+3. Use appropriate hashtags for visibility
+4. Engage with comments and questions
+5. Share updates on new features regularly
