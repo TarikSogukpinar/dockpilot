@@ -57,7 +57,7 @@ DockPilot is a comprehensive container management platform that provides robust 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/dockpilot.git
+git clone https://github.com/TarikSogukpinar/dockpilot.git
 cd dockpilot
 
 # Install dependencies
