@@ -2,6 +2,10 @@ import { HttpException, Injectable, InternalServerErrorException, NotFoundExcept
 import { PrismaService } from '../database/database.service';
 import { CreateConnectionDto } from './dto/requests/createConnection.dto';
 import { CreateConnectionResponseDto } from './dto/responses/createConnectionResponse.dto';
+import { GetConnectionsDto } from './dto/requests/getConnection.dto';
+import { GetConnectionsResponseDto } from './dto/responses/getConnectionResponse.dto';
+
+
 
 @Injectable()
 export class ConnectionService {
@@ -31,11 +35,15 @@ export class ConnectionService {
 
     }
 
-    async getConnections(userId: number): Promise<any> {
+    async getConnections(userId: number): Promise<GetConnectionsResponseDto> {
         try {
-            return this.prismaService.connection.findMany({
+
+            const getConnections = await this.prismaService.connection.findMany({
                 where: { userId },
             });
+
+            return getConnections;
+
         } catch (error) {
             if (error instanceof HttpException) {
                 throw error;

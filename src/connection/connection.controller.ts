@@ -20,7 +20,7 @@ export class ConnectionController {
     ) {
         const userId = customRequest.user?.id;
 
-        if (!customRequest.user) throw new InvalidCredentialsException();
+        if (!userId) throw new InvalidCredentialsException();
 
         const result = await this.connectionService.createConnection(userId, createConnectionDto);
 
@@ -28,13 +28,25 @@ export class ConnectionController {
     }
 
     @Get("getConnections")
-    @UseGuards(JwtAuthGuard) // Tüm uç noktalar için geçerli
+    @ApiOperation({ summary: 'Get all connections' })
+    @ApiResponse({ status: 200, description: 'Connections successfully retrieved' })
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
     async getConnections(@Req() customRequest: CustomRequest) {
-        const userId = customRequest.user?.id; // Kullanıcı ID'si
-        return this.connectionService.getConnections(userId);
+        const userId = customRequest.user?.id;
+
+        if (!userId) throw new InvalidCredentialsException();
+
+        const result = await this.connectionService.getConnections(userId);
+
+        return { result, message: "Connections retrieved successfully" };
     }
 
     @Put(':id')
+    @ApiOperation({ summary: 'Update a connection' })
+    @ApiResponse({ status: 200, description: 'Connection successfully updated' })
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
     async updateConnection(
         @Req() req,
         @Param('id') id: number,
@@ -45,6 +57,10 @@ export class ConnectionController {
     }
 
     @Delete(':id')
+    @ApiOperation({ summary: 'Delete a connection' })
+    @ApiResponse({ status: 200, description: 'Connection successfully deleted' })
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
     async deleteConnection(@Req() req, @Param('id') id: number) {
         const userId = req.user.id; // Kullanıcı ID'si
         return this.connectionService.deleteConnection(id, userId);
