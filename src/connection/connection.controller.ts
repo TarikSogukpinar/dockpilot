@@ -1,27 +1,30 @@
-import { Controller, Post, Get, Put, Delete, Body, Param, Req, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, Param, Req, UseGuards, UnauthorizedException, HttpCode, HttpStatus } from '@nestjs/common';
 import { ConnectionService } from './connection.service';
 import { JwtAuthGuard } from 'src/auth/guard/auth.guard';
 import { CustomRequest } from 'src/core/request/customRequest';
-
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { CreateConnectionDto } from './dto/requests/createConnection.dto';
+import { InvalidCredentialsException } from 'src/core/handler/exceptions/custom-exception';
 @Controller({ path: 'connection', version: '1' })
 export class ConnectionController {
     constructor(private readonly connectionService: ConnectionService) { }
 
     @Post("createConnection")
-    @UseGuards(JwtAuthGuard) // Tüm uç noktalar için geçerli
+    @ApiOperation({ summary: 'Create a new connection' })
+    @ApiResponse({ status: 201, description: 'Connection successfully created' })
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
     async createConnection(
         @Req() customRequest: CustomRequest,
-        @Body() body: { host: string; port: number; tlsConfig?: any },
+        @Body() createConnectionDto: CreateConnectionDto,
     ) {
-        console.log(customRequest, "customRequest");
-        if (!customRequest.user) {
-            throw new UnauthorizedException('User not authenticated');
-        }
+        const userId = customRequest.user?.id;
 
-        const userId = customRequest.user?.id; // Kullanıcı bilgisi
-        console.log('Authenticated User ID:', userId);
+        if (!customRequest.user) throw new InvalidCredentialsException();
 
-        return this.connectionService.createConnection(userId, body.host, body.port, body.tlsConfig);
+        const result = await this.connectionService.createConnection(userId, createConnectionDto);
+
+        return { result, message: "Connection created successfully" };
     }
 
     @Get("getConnections")
