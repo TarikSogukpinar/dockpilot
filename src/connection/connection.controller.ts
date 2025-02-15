@@ -5,6 +5,8 @@ import { CustomRequest } from 'src/core/request/customRequest';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateConnectionDto } from './dto/requests/createConnection.dto';
 import { InvalidCredentialsException } from 'src/core/handler/exceptions/custom-exception';
+import { UpdateConnectionDto } from './dto/requests/updateConnection.dto';
+import { DeleteConnectionDto } from './dto/requests/deleteConnection.dto';
 @Controller({ path: 'connection', version: '1' })
 export class ConnectionController {
     constructor(private readonly connectionService: ConnectionService) { }
@@ -49,11 +51,15 @@ export class ConnectionController {
     @HttpCode(HttpStatus.OK)
     async updateConnection(
         @Req() req,
-        @Param('id') id: number,
-        @Body() body: { host?: string; port?: number; tlsConfig?: any },
+        @Body() updateConnectionDto: UpdateConnectionDto,
     ) {
-        const userId = req.user.id; // Kullanıcı ID'si
-        return this.connectionService.updateConnection(id, userId, body);
+        const userId = req.user.id;
+
+        if (!userId) throw new InvalidCredentialsException();
+
+        const result = await this.connectionService.updateConnection(userId, updateConnectionDto);
+
+        return { result, message: "Connection updated successfully" };
     }
 
     @Delete(':id')
@@ -61,8 +67,8 @@ export class ConnectionController {
     @ApiResponse({ status: 200, description: 'Connection successfully deleted' })
     @UseGuards(JwtAuthGuard)
     @HttpCode(HttpStatus.OK)
-    async deleteConnection(@Req() req, @Param('id') id: number) {
-        const userId = req.user.id; // Kullanıcı ID'si
-        return this.connectionService.deleteConnection(id, userId);
+    async deleteConnection(@Req() req, @Param() deleteConnectionDto: DeleteConnectionDto) {
+        const userId = req.user.id;
+        return this.connectionService.deleteConnection(userId, deleteConnectionDto);
     }
 }

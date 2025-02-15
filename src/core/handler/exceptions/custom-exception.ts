@@ -41,3 +41,15 @@ export class ServiceUnavailableException extends HttpException {
         super('Service unavailable', HttpStatus.SERVICE_UNAVAILABLE);
     }
 }
+
+export class ConnectionNotFoundException extends HttpException {
+    constructor() {
+        super('Connection not found', HttpStatus.NOT_FOUND);
+    }
+}
+
+export class ConnectionIdIsRequiredException extends HttpException {
+    constructor() {
+        super('Connection ID is required', HttpStatus.BAD_REQUEST);
+    }
+}

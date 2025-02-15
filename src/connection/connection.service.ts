@@ -4,7 +4,15 @@ import { CreateConnectionDto } from './dto/requests/createConnection.dto';
 import { CreateConnectionResponseDto } from './dto/responses/createConnectionResponse.dto';
 import { GetConnectionsDto } from './dto/requests/getConnection.dto';
 import { GetConnectionsResponseDto } from './dto/responses/getConnectionResponse.dto';
-
+import { GetConnectionByIdDto } from './dto/requests/getConnectionById.dto';
+import { GetConnectionByIdResponseDto } from './dto/responses/getConnectionByIdResponse.dto';
+import { ConnectionIdIsRequiredException, ConnectionNotFoundException } from 'src/core/handler/exceptions/custom-exception';
+import { UpdateConnectionDto } from './dto/requests/updateConnection.dto';
+import { UpdateConnectionResponseDto } from './dto/responses/updateConnectionResponse.dto';
+import { DeleteConnectionDto } from './dto/requests/deleteConnection.dto';
+import { DeleteConnectionResponseDto } from './dto/responses/deleteConnectionResponse.dto';
+import { FindConnectionByIdRequestDto } from './dto/requests/findConnectionById.dto';
+import { FindConnectionResponseDto } from './dto/responses/findConnectionResponse.dto';
 
 
 @Injectable()
@@ -54,24 +62,21 @@ export class ConnectionService {
 
     }
 
-    async getConnectionById(connectionUuid: string, userId: number): Promise<any> {
+    async getConnectionById(getConnectionByIdDto: GetConnectionByIdDto, userId: number): Promise<GetConnectionByIdResponseDto> {
         try {
-            if (!connectionUuid) {
-                throw new Error('Connection ID is required');
-            }
 
-            const connection = await this.prismaService.connection.findFirst({
+            if (!getConnectionByIdDto.uuid) throw new ConnectionIdIsRequiredException();
+
+            const getConnectionById = await this.prismaService.connection.findFirst({
                 where: {
-                    uuid: connectionUuid,
+                    uuid: getConnectionByIdDto.uuid,
                     userId
                 },
             });
 
-            if (!connection) {
-                throw new NotFoundException('Connection not found or you do not have access.');
-            }
+            if (!getConnectionById) throw new ConnectionNotFoundException();
 
-            return connection;
+            return getConnectionById;
         } catch (error) {
             if (error instanceof HttpException) {
                 throw error;
@@ -82,23 +87,28 @@ export class ConnectionService {
 
     }
 
-    async updateConnection(id: number, userId: number, data: { host?: string; port?: number; tlsConfig?: any }): Promise<any> {
+    async updateConnection(userId: number, updateConnectionDto: UpdateConnectionDto): Promise<UpdateConnectionResponseDto> {
         try {
-            const connection = await this.prismaService.connection.findFirst({
+            const updateConnection = await this.prismaService.connection.findFirst({
                 where: {
-                    id,
-                    userId
+                    id: updateConnectionDto.id,
+                    userId,
                 },
             });
 
-            if (!connection) {
-                throw new NotFoundException('Connection not found or you do not have access.');
-            }
+            if (!updateConnection) throw new ConnectionNotFoundException();
 
-            return this.prismaService.connection.update({
-                where: { id },
-                data,
+            const updatedConnection = await this.prismaService.connection.update({
+                where: { id: updateConnectionDto.id },
+                data: {
+                    host: updateConnectionDto.host,
+                    port: updateConnectionDto.port,
+                    tlsConfig: updateConnectionDto.tlsConfig,
+                    name: updateConnectionDto.name
+                },
             });
+
+            return updatedConnection;
         } catch (error) {
             if (error instanceof HttpException) {
                 throw error;
@@ -109,22 +119,23 @@ export class ConnectionService {
 
     }
 
-    async deleteConnection(id: number, userId: number): Promise<any> {
+    async deleteConnection(userId: number, deleteConnectionDto: DeleteConnectionDto): Promise<DeleteConnectionResponseDto> {
         try {
-            const connection = await this.prismaService.connection.findFirst({
+            const findConnectionById = await this.prismaService.connection.findFirst({
                 where: {
-                    id,
-                    userId
+                    id: deleteConnectionDto.id,
+                    userId,
                 },
             });
 
-            if (!connection) {
-                throw new NotFoundException('Connection not found or you do not have access.');
-            }
+            if (!findConnectionById) throw new ConnectionNotFoundException();
 
-            return this.prismaService.connection.delete({
-                where: { id },
+
+            const deletedConnection = await this.prismaService.connection.delete({
+                where: { id: deleteConnectionDto.id },
             });
+
+            return deletedConnection;
 
         } catch (error) {
             if (error instanceof HttpException) {
@@ -135,17 +146,16 @@ export class ConnectionService {
         }
     }
 
-    async findById(id: number): Promise<any> {
+    async findById(findConnectionByIdRequestDto: FindConnectionByIdRequestDto): Promise<FindConnectionResponseDto> {
         try {
-            const connection = await this.prismaService.connection.findUnique({
-                where: { id },
+            const findConnectionById = await this.prismaService.connection.findUnique({
+                where: { id: findConnectionByIdRequestDto.id },
             });
 
-            if (!connection) {
-                throw new NotFoundException('Connection not found');
-            }
+            if (!findConnectionById) throw new ConnectionNotFoundException()
 
-            return connection;
+
+            return findConnectionById;
 
         } catch (error) {
             if (error instanceof HttpException) {
