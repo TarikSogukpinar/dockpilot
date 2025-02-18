@@ -10,6 +10,7 @@ import { CreateContainerResponseDto } from './dto/responses/createContainerRespo
 import { PullImageDto } from "./dto/requests/pullImage.dto";
 import { PullImageResponseDto } from "./dto/responses/pullImageResponse.dto";
 import { SetupDockerDto } from "./dto/requests/setupDocker.dto";
+import { ContainerUUIDNotFoundForGivenConnectionException, ContainerWithUuidNotFoundException } from "src/core/handler/exceptions/custom-exception";
 
 @Injectable()
 export class ContainerService {
@@ -27,7 +28,7 @@ export class ContainerService {
 
     private async setupDocker(setupDockerDto: SetupDockerDto): Promise<DockerSetupResponse> {
         try {
-            const connection = await this.connectionService.getConnectionById(setupDockerDto.connectionUuid, setupDockerDto.userId);
+            const connection = await this.connectionService.getConnectionById(setupDockerDto.userId, setupDockerDto.connectionUuid);
             const connectionStatus = await this.connectionChecker.checkConnection(connection);
 
             if (!connectionStatus.isConnected) {
@@ -59,18 +60,11 @@ export class ContainerService {
             };
 
         } catch (error) {
-            if (error instanceof NotFoundException) {
-                throw new NotFoundException('Connection not found or access denied');
-            }
-            if (error instanceof ServiceUnavailableException) {
+            if (error instanceof HttpException) {
                 throw error;
             }
 
-            return {
-                isConnected: false,
-                connection: null,
-                error: `Failed to setup Docker connection: ${error.message}`
-            };
+            throw new InternalServerErrorException("An unexpected error occurred while setup docker");
         }
     }
 
@@ -120,31 +114,34 @@ export class ContainerService {
                 throw error;
             }
 
-            throw new InternalServerErrorException("An unexpected error occurred while creating container");
+            throw new InternalServerErrorException("An unexpected error occurred while create and start container");
         }
     }
 
     async listContainers(setupDockerDto: SetupDockerDto): Promise<ContainerInfo[]> {
         const setupResponse = await this.setupDocker(setupDockerDto);
 
-        if (!setupResponse.isConnected) {
-            throw new ServiceUnavailableException(setupResponse.error);
-        }
+        if (!setupResponse.isConnected) throw new ServiceUnavailableException()
 
         try {
-            return await this.dockerService.listContainers();
+            const listContainers = await this.dockerService.listContainers();
+
+            return listContainers;
         } catch (error) {
-            console.error(error);
-            throw new Error(`Failed to list containers: ${error.message}`);
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while list container");
         }
     }
 
     async stopContainer(setupDockerDto: SetupDockerDto, containerUuid: string): Promise<string> {
-        // Kullanıcı bağlantısını doğrula
+
         const setupResponse = await this.setupDocker(setupDockerDto);
 
         if (!setupResponse.isConnected) {
-            throw new ServiceUnavailableException(setupResponse.error);
+            throw new ServiceUnavailableException();
         }
 
         // Veritabanından konteyner kaydını al
@@ -174,21 +171,28 @@ export class ContainerService {
 
             return `Container ${dockerContainerId} stopped successfully.`;
         } catch (error) {
-            console.error(`Error stopping container: ${error.message}`);
-            throw new Error(`Failed to stop container: ${error.message}`);
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while stop container");
         }
     }
 
-    private async updateContainerStatus(setupDockerDto: SetupDockerDto, status: string): Promise<void> {
+    private async updateContainerStatus(setupDockerDto: SetupDockerDto, status: string): Promise<any> {
         try {
-            // `containerUuid` üzerinden güncelleme
-            await this.prismaService.container.update({
-                where: { uuid: setupDockerDto.connectionUuid }, // `uuid` alanını kullanıyoruz
+            const updateContainerStatus = await this.prismaService.container.update({
+                where: { uuid: setupDockerDto.connectionUuid },
                 data: { status: ContainerStatus.PAUSED },
             });
+
+            return updateContainerStatus;
         } catch (error) {
-            console.error(`Failed to update container status in database: ${error.message}`);
-            throw new Error(`Failed to update container status in database: ${error.message}`);
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while update container status");
         }
     }
 
@@ -199,7 +203,6 @@ export class ContainerService {
             throw new ServiceUnavailableException(setupResponse.error);
         }
 
-        // Veritabanından konteyner kaydını al
         const containerRecord = await this.prismaService.container.findFirst({
             where: {
                 uuid: containerUuid,
@@ -217,77 +220,79 @@ export class ContainerService {
             const container = this.dockerService.getContainer(dockerContainerId);
             await container.remove({ force: true });
 
-            // Veritabanından container kaydını sil
             await this.prismaService.container.delete({
                 where: { uuid: containerUuid },
             });
 
             return `Container ${dockerContainerId} removed successfully.`;
         } catch (error) {
-            console.error(`Failed to remove container: ${error.message}`);
-            throw new Error(`Failed to remove container: ${error.message}`);
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while remove container");
         }
     }
 
     async inspectContainer(setupDockerDto: SetupDockerDto, containerUuid: string): Promise<Docker.ContainerInspectInfo> {
-        const setupResponse = await this.setupDocker(setupDockerDto);
-
-        if (!setupResponse.isConnected) {
-            throw new ServiceUnavailableException(setupResponse.error);
-        }
-
-        // Veritabanından konteyner kaydını al
-        const containerRecord = await this.prismaService.container.findFirst({
-            where: {
-                uuid: containerUuid,
-                connectionId: this.currentConnection.id,
-            },
-        });
-
-        if (!containerRecord) {
-            throw new Error(`Container with UUID ${containerUuid} not found for the given connection.`);
-        }
-
-        const dockerContainerId = containerRecord.dockerId;
-
         try {
-            const container = this.dockerService.getContainer(dockerContainerId);
-            const inspectResult = await container.inspect();
-            return inspectResult;
+            const setupResponse = await this.setupDocker(setupDockerDto);
+
+            if (!setupResponse.isConnected) throw new ServiceUnavailableException();
+
+            const containerRecord = await this.prismaService.container.findFirst({
+                where: {
+                    uuid: containerUuid,
+                    connectionId: this.currentConnection.id,
+                },
+            });
+
+            if (!containerRecord) throw new ContainerUUIDNotFoundForGivenConnectionException();
+
+            const dockerContainerId = containerRecord.dockerId;
+            const getContainer = await this.dockerService.getContainer(dockerContainerId);
+            const inspectContainerResult = await getContainer.inspect();
+
+            return inspectContainerResult;
+
         } catch (error) {
-            console.error(`Failed to inspect container: ${error.message}`);
-            throw new Error(`Failed to inspect container: ${error.message}`);
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while inspect container");
         }
     }
 
     async restartContainer(setupDockerDto: SetupDockerDto, containerUuid: string): Promise<string> {
-        const setupResponse = await this.setupDocker(setupDockerDto);
-
-        if (!setupResponse.isConnected) {
-            throw new ServiceUnavailableException(setupResponse.error);
-        }
-
-        // Veritabanından konteyner kaydını al
-        const containerRecord = await this.prismaService.container.findFirst({
-            where: {
-                uuid: containerUuid,
-                connectionId: this.currentConnection.id,
-            },
-        });
-
-        if (!containerRecord) {
-            throw new Error(`Container with UUID ${containerUuid} not found for the given connection.`);
-        }
-
-        const dockerContainerId = containerRecord.dockerId;
-
         try {
-            const container = this.dockerService.getContainer(dockerContainerId);
-            await container.restart();
-            return `Container ${dockerContainerId} restarted successfully.`;
+            const setupResponse = await this.setupDocker(setupDockerDto);
+
+            if (!setupResponse.isConnected) throw new ServiceUnavailableException();
+
+            const containerRecord = await this.prismaService.container.findFirst({
+                where: {
+                    uuid: containerUuid,
+                    connectionId: this.currentConnection.id,
+                },
+            });
+
+            if (!containerRecord) throw new ContainerUUIDNotFoundForGivenConnectionException();
+
+            const dockerContainerId = containerRecord.dockerId;
+
+            const container = await this.dockerService.getContainer(dockerContainerId);
+
+            const restartContainerResult = await container.restart();
+
+            return restartContainerResult;
+
         } catch (error) {
-            console.error(`Failed to restart container: ${error.message}`);
-            throw new Error(`Failed to restart container: ${error.message}`);
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while restart container");
         }
     }
 
@@ -301,23 +306,21 @@ export class ContainerService {
             stream?: string;
         } = {}
     ): Promise<any[]> {
-        const setupResponse = await this.setupDocker(setupDockerDto);
-        if (!setupResponse.isConnected) {
-            throw new ServiceUnavailableException(setupResponse.error);
-        }
-
-        const containerRecord = await this.prismaService.container.findFirst({
-            where: {
-                uuid: containerUuid,
-                connectionId: this.currentConnection.id,
-            },
-        });
-
-        if (!containerRecord) {
-            throw new NotFoundException(`Container with UUID ${containerUuid} not found`);
-        }
 
         try {
+            const setupResponse = await this.setupDocker(setupDockerDto);
+
+            if (!setupResponse.isConnected) throw new ServiceUnavailableException();
+
+            const containerRecord = await this.prismaService.container.findFirst({
+                where: {
+                    uuid: containerUuid,
+                    connectionId: this.currentConnection.id,
+                },
+            });
+
+            if (!containerRecord) throw new ContainerWithUuidNotFoundException()
+
             // Get Docker logs if needed
             const container = this.dockerService.getContainer(containerRecord.dockerId);
             const dockerLogs = await container.logs({
@@ -353,9 +356,13 @@ export class ContainerService {
                 query.take = options.limit;
             }
 
-            return this.prismaService.containerLog.findMany(query);
+            return await this.prismaService.containerLog.findMany(query);
         } catch (error) {
-            throw new Error(`Failed to get logs for container: ${error.message}`);
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while get container logs");
         }
     }
 

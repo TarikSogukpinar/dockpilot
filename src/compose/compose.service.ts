@@ -34,7 +34,7 @@ export class ComposeService {
 
     private async setupDocker(userId: number, connectionUuid: string): Promise<DockerSetupResponse> {
         try {
-            const connection = await this.connectionService.getConnectionById(connectionUuid, userId);
+            const connection = await this.connectionService.getConnectionById(userId, connectionUuid);
             const connectionStatus = await this.connectionChecker.checkConnection(connection);
 
             if (!connectionStatus.isConnected) {

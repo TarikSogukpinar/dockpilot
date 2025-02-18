@@ -53,3 +53,21 @@ export class ConnectionIdIsRequiredException extends HttpException {
         super('Connection ID is required', HttpStatus.BAD_REQUEST);
     }
 }
+
+export class ContainerWithUuidNotFoundException extends HttpException {
+    constructor() {
+        super('Container with uuid not found', HttpStatus.NOT_FOUND);
+    }
+}
+
+export class ContainerUUIDNotFoundForGivenConnectionException extends HttpException {
+    constructor() {
+        super('Container with uuid not found for the given connection', HttpStatus.NOT_FOUND);
+    }
+}
+
+export class ContainerWithUuidNotFoundException extends HttpException {
+    constructor() {
+        super('Container with uuid not found', HttpStatus.NOT_FOUND);
+    }
+}

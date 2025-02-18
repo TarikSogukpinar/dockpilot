@@ -38,7 +38,7 @@ export class ConnectionService {
                 throw error;
             }
 
-            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
+            throw new InternalServerErrorException("An unexpected error occurred while creating connection");
         }
 
     }
@@ -57,19 +57,19 @@ export class ConnectionService {
                 throw error;
             }
 
-            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
+            throw new InternalServerErrorException("An unexpected error occurred while getting connections");
         }
 
     }
 
-    async getConnectionById(getConnectionByIdDto: GetConnectionByIdDto, userId: number): Promise<GetConnectionByIdResponseDto> {
+    async getConnectionById(userId: number, uuid: string): Promise<GetConnectionByIdResponseDto> {
         try {
 
-            if (!getConnectionByIdDto.uuid) throw new ConnectionIdIsRequiredException();
+            if (!uuid) throw new ConnectionIdIsRequiredException();
 
             const getConnectionById = await this.prismaService.connection.findFirst({
                 where: {
-                    uuid: getConnectionByIdDto.uuid,
+                    uuid: uuid,
                     userId
                 },
             });
@@ -82,7 +82,7 @@ export class ConnectionService {
                 throw error;
             }
 
-            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
+            throw new InternalServerErrorException("An unexpected error occurred while getting connection by id");
         }
 
     }
@@ -114,7 +114,7 @@ export class ConnectionService {
                 throw error;
             }
 
-            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
+            throw new InternalServerErrorException("An unexpected error occurred while updating connection");
         }
 
     }
@@ -142,7 +142,7 @@ export class ConnectionService {
                 throw error;
             }
 
-            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
+            throw new InternalServerErrorException("An unexpected error occurred while deleting connection");
         }
     }
 
@@ -162,7 +162,7 @@ export class ConnectionService {
                 throw error;
             }
 
-            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
+            throw new InternalServerErrorException("An unexpected error occurred while finding connection by id");
         }
 
     }
@@ -187,7 +187,7 @@ export class ConnectionService {
                 throw error;
             }
 
-            throw new InternalServerErrorException("An unexpected error occurred while creating ticket");
+            throw new InternalServerErrorException("An unexpected error occurred while getting connection by uuid");
         }
     }
 }
