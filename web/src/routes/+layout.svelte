@@ -3,17 +3,20 @@
   import { auth } from '$lib/stores/auth';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
-  import { onMount } from 'svelte';
+  import { browser } from '$app/environment';
 
   const publicPaths = ['/', '/login', '/register'];
   
-  $: if (!$auth.isAuthenticated && !publicPaths.includes($page.url.pathname)) {
+  // Client-side only navigation
+  $: if (browser && !$auth.isAuthenticated && !publicPaths.includes($page.url.pathname)) {
     goto('/login');
   }
 
   function handleLogout() {
     auth.logout();
-    goto('/login');
+    if (browser) {
+      goto('/login');
+    }
   }
 </script>
 
