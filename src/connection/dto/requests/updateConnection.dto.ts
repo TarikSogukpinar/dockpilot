@@ -1,39 +1,46 @@
-import { IsNotEmpty, IsString, IsUUID, IsNumber, IsObject, IsDate } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsUUID,
+  IsNumber,
+  IsObject,
+  IsDate,
+} from 'class-validator';
 
 export class UpdateConnectionDto {
-    @IsNumber()
-    @IsNotEmpty()
-    id: number;
+  @IsNumber()
+  @IsNotEmpty()
+  id: number;
 
-    @IsUUID()
-    @IsNotEmpty()
-    uuid: string;
+  @IsUUID()
+  @IsNotEmpty()
+  uuid: string;
 
-    @IsString()
-    @IsNotEmpty()
-    name: string;
+  @IsString()
+  @IsNotEmpty()
+  name: string;
 
-    @IsString()
-    @IsNotEmpty()
-    host: string;
+  @IsString()
+  @IsNotEmpty()
+  host: string;
 
-    @IsNumber()
-    @IsNotEmpty()
-    port: number;
+  @IsNumber()
+  @IsNotEmpty()
+  port: number;
 
-    @IsObject()
-    @IsNotEmpty()
-    tlsConfig: any;
+  @IsObject()
+  @IsNotEmpty()
+  tlsConfig: any;
 
-    @IsNumber()
-    @IsNotEmpty()
-    userId: number;
+  @IsNumber()
+  @IsNotEmpty()
+  userId: number;
 
-    @IsDate()
-    @IsNotEmpty()
-    createdAt: Date;
+  @IsDate()
+  @IsNotEmpty()
+  createdAt: Date;
 
-    @IsDate()
-    @IsNotEmpty()
-    updatedAt: Date;
+  @IsDate()
+  @IsNotEmpty()
+  updatedAt: Date;
 }

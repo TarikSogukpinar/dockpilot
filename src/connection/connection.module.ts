@@ -4,8 +4,8 @@ import { ConnectionService } from './connection.service';
 import { ConnectionController } from './connection.controller';
 
 @Module({
-    providers: [ConnectionService, PrismaService],
-    controllers: [ConnectionController],
-    exports: [ConnectionService],
+  providers: [ConnectionService, PrismaService],
+  controllers: [ConnectionController],
+  exports: [ConnectionService],
 })
-export class ConnectionModule { }
+export class ConnectionModule {}

@@ -1,7 +1,6 @@
-import { IsNumber } from "class-validator";
-
+import { IsNumber } from 'class-validator';
 
 export class FindConnectionByIdRequestDto {
-    @IsNumber()
-    id: number;
+  @IsNumber()
+  id: number;
 }

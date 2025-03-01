@@ -43,4 +43,4 @@ export class GetMeResponseDto {
     lastLogin?: Date;
     lastActivity?: Date;
   };
-} 
+}

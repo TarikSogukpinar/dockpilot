@@ -10,4 +10,4 @@ interface ServiceConfig {
 export interface ComposeConfig {
   version: string;
   services: Record<string, ServiceConfig>;
-} 
+}

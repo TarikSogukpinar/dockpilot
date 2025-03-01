@@ -13,27 +13,26 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthController } from './auth.controller';
 import { HttpModule } from '@nestjs/axios';
 
-
 @Module({
-    imports: [
-        PassportModule,
-        JwtModule.register({
-            secret: process.env.JWT_SECRET,
-            signOptions: { expiresIn: process.env.JWT_EXPIRES_IN },
-        }),
-        HashingModule,
-        TokenModule,
-        PrismaModule,
-        HttpModule,
-    ],
-    controllers: [AuthController],
-    providers: [
-        AuthService,
-        PrismaService,
-        JwtStrategy,
-        GithubStrategy,
-        GoogleStrategy,
-    ],
-    exports: [AuthService],
+  imports: [
+    PassportModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN },
+    }),
+    HashingModule,
+    TokenModule,
+    PrismaModule,
+    HttpModule,
+  ],
+  controllers: [AuthController],
+  providers: [
+    AuthService,
+    PrismaService,
+    JwtStrategy,
+    GithubStrategy,
+    GoogleStrategy,
+  ],
+  exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

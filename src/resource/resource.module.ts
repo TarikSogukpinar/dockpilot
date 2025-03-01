@@ -7,13 +7,9 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ConnectionChecker } from 'src/connection/connection.checker';
 
 @Module({
-    imports: [
-        PrismaModule,
-        ConnectionModule,
-        ScheduleModule.forRoot()
-    ],
-    controllers: [ResourceController],
-    providers: [ResourceService, ConnectionChecker],
-    exports: [ResourceService],
+  imports: [PrismaModule, ConnectionModule, ScheduleModule.forRoot()],
+  controllers: [ResourceController],
+  providers: [ResourceService, ConnectionChecker],
+  exports: [ResourceService],
 })
-export class ResourceModule { }
+export class ResourceModule {}

@@ -1,5 +1,18 @@
-import { Controller, Get, Put, Query, UseGuards, Req, Body } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Put,
+  Query,
+  UseGuards,
+  Req,
+  Body,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../auth/guard/auth.guard';
 import { GetMeResponseDto } from './dto/get-me.dto';
@@ -78,7 +91,10 @@ export class UserController {
     @Req() req: CustomRequest,
     @Body() updatePreferencesDto: UpdatePreferencesDto,
   ) {
-    return this.userService.updatePreferences(req.user.id, updatePreferencesDto);
+    return this.userService.updatePreferences(
+      req.user.id,
+      updatePreferencesDto,
+    );
   }
 
   @Get('limits')

@@ -1,4 +1,4 @@
 export interface Payload {
-    id: number;
-    uuid: string;
-  }
+  id: number;
+  uuid: string;
+}

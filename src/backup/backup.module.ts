@@ -6,12 +6,9 @@ import { ConnectionModule } from '../connection/connection.module';
 import { ConnectionChecker } from 'src/connection/connection.checker';
 
 @Module({
-    imports: [
-        PrismaModule,
-        ConnectionModule
-    ],
-    controllers: [BackupController],
-    providers: [BackupService, ConnectionChecker],
-    exports: [BackupService]
+  imports: [PrismaModule, ConnectionModule],
+  controllers: [BackupController],
+  providers: [BackupService, ConnectionChecker],
+  exports: [BackupService],
 })
-export class BackupModule { }
+export class BackupModule {}

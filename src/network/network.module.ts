@@ -6,9 +6,9 @@ import { ConnectionModule } from '../connection/connection.module';
 import { ConnectionChecker } from '../connection/connection.checker';
 
 @Module({
-    imports: [PrismaModule, ConnectionModule],
-    controllers: [NetworkController],
-    providers: [NetworkService, ConnectionChecker],
-    exports: [NetworkService],
+  imports: [PrismaModule, ConnectionModule],
+  controllers: [NetworkController],
+  providers: [NetworkService, ConnectionChecker],
+  exports: [NetworkService],
 })
-export class NetworkModule { }
+export class NetworkModule {}

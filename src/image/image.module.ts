@@ -6,9 +6,9 @@ import { ConnectionModule } from '../connection/connection.module';
 import { ConnectionChecker } from 'src/connection/connection.checker';
 
 @Module({
-    imports: [PrismaModule, ConnectionModule],
-    controllers: [ImageController],
-    providers: [ImageService, ConnectionChecker],
-    exports: [ImageService],
+  imports: [PrismaModule, ConnectionModule],
+  controllers: [ImageController],
+  providers: [ImageService, ConnectionChecker],
+  exports: [ImageService],
 })
-export class ImageModule { }
+export class ImageModule {}

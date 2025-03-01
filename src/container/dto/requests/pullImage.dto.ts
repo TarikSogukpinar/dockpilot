@@ -1,4 +1,4 @@
 export class PullImageDto {
-    image: string;
-    tag?: string = 'latest';
+  image: string;
+  tag?: string = 'latest';
 }

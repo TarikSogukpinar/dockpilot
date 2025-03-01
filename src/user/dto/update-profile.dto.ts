@@ -71,4 +71,4 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   timeZone?: string;
-} 
+}

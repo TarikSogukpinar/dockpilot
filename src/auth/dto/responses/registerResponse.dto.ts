@@ -1,12 +1,12 @@
 import { IsString, IsEmail, IsUUID } from 'class-validator';
 
 export class RegisterResponseDto {
-    @IsUUID()
-    uuid: string;
+  @IsUUID()
+  uuid: string;
 
-    @IsEmail()
-    email: string;
+  @IsEmail()
+  email: string;
 
-    @IsString()
-    role: string;
+  @IsString()
+  role: string;
 }

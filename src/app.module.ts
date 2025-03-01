@@ -42,9 +42,9 @@ import { VolumeModule } from './volume/volume.module';
     NetworkModule,
     ResourceModule,
     BackupModule,
-    VolumeModule
+    VolumeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

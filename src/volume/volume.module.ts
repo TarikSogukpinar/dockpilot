@@ -6,9 +6,9 @@ import { ConnectionModule } from '../connection/connection.module';
 import { ConnectionChecker } from '../connection/connection.checker';
 
 @Module({
-    imports: [ConnectionModule, PrismaModule],
-    controllers: [VolumeController],
-    providers: [VolumeService, ConnectionChecker],
-    exports: [VolumeService],
+  imports: [ConnectionModule, PrismaModule],
+  controllers: [VolumeController],
+  providers: [VolumeService, ConnectionChecker],
+  exports: [VolumeService],
 })
-export class VolumeModule { }
+export class VolumeModule {}

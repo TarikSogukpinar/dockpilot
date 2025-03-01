@@ -1,10 +1,9 @@
-import { IsNumber, IsUUID } from "class-validator";
-
+import { IsNumber, IsUUID } from 'class-validator';
 
 export class GetConnectionByUUIDDto {
-    @IsNumber()
-    userId: number;
+  @IsNumber()
+  userId: number;
 
-    @IsUUID()
-    uuid: string;
+  @IsUUID()
+  uuid: string;
 }

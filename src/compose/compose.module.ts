@@ -11,4 +11,4 @@ import { ConnectionChecker } from '../connection/connection.checker';
   providers: [ComposeService, ConnectionChecker],
   exports: [ComposeService],
 })
-export class ComposeModule {} 
+export class ComposeModule {}

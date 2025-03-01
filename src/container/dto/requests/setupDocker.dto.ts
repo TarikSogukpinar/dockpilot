@@ -1,4 +1,4 @@
 export class SetupDockerDto {
-    userId: number;
-    connectionUuid: string;
+  userId: number;
+  connectionUuid: string;
 }

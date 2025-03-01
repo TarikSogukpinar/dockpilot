@@ -26,4 +26,4 @@ export class UpdatePreferencesDto {
   @IsOptional()
   @IsBoolean()
   apiKeyEnabled?: boolean;
-} 
+}

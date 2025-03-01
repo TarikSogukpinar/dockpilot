@@ -1,5 +1,5 @@
-import { Payload } from "./payload";
+import { Payload } from './payload';
 
 export interface CustomRequest extends Request {
-    user?: Payload;
+  user?: Payload;
 }

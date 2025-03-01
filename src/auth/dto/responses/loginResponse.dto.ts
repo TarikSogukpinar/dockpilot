@@ -1,12 +1,12 @@
 import { IsEmail, IsString } from 'class-validator';
 
 export class LoginResponseDto {
-    @IsString()
-    accessToken: string;
+  @IsString()
+  accessToken: string;
 
-    @IsString()
-    refreshToken: string;
+  @IsString()
+  refreshToken: string;
 
-    @IsEmail()
-    email: string;
+  @IsEmail()
+  email: string;
 }
