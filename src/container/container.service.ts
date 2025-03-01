@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import {
   ContainerStatus,
-  ContainerHealthStatus,
   ContainerRestartPolicy,
   ContainerAction,
 } from '@prisma/client';
@@ -38,7 +37,7 @@ export class ContainerService {
     private readonly connectionService: ConnectionService,
     private readonly prismaService: PrismaService,
     private readonly connectionChecker: ConnectionChecker,
-  ) {}
+  ) { }
 
   private initializeDocker(connection: { host: string; port: number }): void {
     this.dockerService = new Docker({
@@ -105,9 +104,7 @@ export class ContainerService {
   ): Promise<CreateContainerResponseDto> {
     const setupResponse = await this.setupDocker(setupDockerDto);
 
-    if (!setupResponse.isConnected) {
-      throw new ServiceUnavailableException();
-    }
+    if (!setupResponse.isConnected) throw new ServiceUnavailableException();
 
     try {
       const dockerOptions: ContainerCreateOptions = {

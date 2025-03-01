@@ -7,9 +7,7 @@ import {
 import { PrismaService } from '../database/database.service';
 import { CreateConnectionDto } from './dto/requests/createConnection.dto';
 import { CreateConnectionResponseDto } from './dto/responses/createConnectionResponse.dto';
-import { GetConnectionsDto } from './dto/requests/getConnection.dto';
 import { GetConnectionsResponseDto } from './dto/responses/getConnectionResponse.dto';
-import { GetConnectionByIdDto } from './dto/requests/getConnectionById.dto';
 import { GetConnectionByIdResponseDto } from './dto/responses/getConnectionByIdResponse.dto';
 import {
   ConnectionIdIsRequiredException,
@@ -24,7 +22,7 @@ import { FindConnectionResponseDto } from './dto/responses/findConnectionRespons
 
 @Injectable()
 export class ConnectionService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
   async createConnection(
     userId: number,

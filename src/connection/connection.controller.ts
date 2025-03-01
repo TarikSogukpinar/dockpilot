@@ -8,7 +8,6 @@ import {
   Param,
   Req,
   UseGuards,
-  UnauthorizedException,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -22,7 +21,7 @@ import { UpdateConnectionDto } from './dto/requests/updateConnection.dto';
 import { DeleteConnectionDto } from './dto/requests/deleteConnection.dto';
 @Controller({ path: 'connection', version: '1' })
 export class ConnectionController {
-  constructor(private readonly connectionService: ConnectionService) {}
+  constructor(private readonly connectionService: ConnectionService) { }
 
   @Post('createConnection')
   @ApiOperation({ summary: 'Create a new connection' })
