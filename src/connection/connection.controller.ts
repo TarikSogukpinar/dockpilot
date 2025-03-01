@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Ip,
 } from '@nestjs/common';
 import { ConnectionService } from './connection.service';
 import { JwtAuthGuard } from 'src/auth/guard/auth.guard';
@@ -31,17 +32,25 @@ export class ConnectionController {
   async createConnection(
     @Req() customRequest: CustomRequest,
     @Body() createConnectionDto: CreateConnectionDto,
+    @Ip() ipAddress: string,
   ) {
     const userId = customRequest.user?.id;
 
     if (!userId) throw new InvalidCredentialsException();
+
+    // Automatically set the location to the IP address
+    createConnectionDto.location = `IP: ${ipAddress}`;
 
     const result = await this.connectionService.createConnection(
       userId,
       createConnectionDto,
     );
 
-    return { result, message: 'Connection created successfully' };
+    return {
+      result,
+      message: 'Connection created successfully',
+      location: createConnectionDto.location
+    };
   }
 
   @Get('getConnections')
@@ -93,6 +102,11 @@ export class ConnectionController {
     @Param() deleteConnectionDto: DeleteConnectionDto,
   ) {
     const userId = req.user.id;
-    return this.connectionService.deleteConnection(userId, deleteConnectionDto);
+
+    if (!userId) throw new InvalidCredentialsException();
+
+    const result = await this.connectionService.deleteConnection(userId, deleteConnectionDto);
+
+    return { result, message: "Connection deleted successfully" }
   }
 }

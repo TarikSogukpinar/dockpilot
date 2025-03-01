@@ -14,6 +14,7 @@ import { NetworkModule } from './network/network.module';
 import { ResourceModule } from './resource/resource.module';
 import { BackupModule } from './backup/backup.module';
 import { VolumeModule } from './volume/volume.module';
+import { EncryptionModule } from './core/encryption/encryption.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { VolumeModule } from './volume/volume.module';
     ResourceModule,
     BackupModule,
     VolumeModule,
+    EncryptionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

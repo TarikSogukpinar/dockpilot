@@ -39,10 +39,16 @@ export class ContainerService {
     private readonly connectionChecker: ConnectionChecker,
   ) { }
 
-  private initializeDocker(connection: { host: string; port: number }): void {
+  private initializeDocker(connection: Connection): void {
     this.dockerService = new Docker({
       host: connection.host,
       port: connection.port,
+      ...(connection.tlsConfig && {
+        ca: connection.tlsConfig['ca'],
+        cert: connection.tlsConfig['cert'],
+        key: connection.tlsConfig['key'],
+      }),
+      timeout: connection.connectionTimeout || 30000, // Bağlantı zaman aşımı süresini kullan
     });
   }
 
@@ -128,7 +134,6 @@ export class ContainerService {
 
       return {
         status: 200,
-        message: 'Container created successfully',
         data: {
           id: createdContainer.id.toString(),
           name: createdContainer.name,

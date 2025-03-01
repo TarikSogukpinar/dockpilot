@@ -177,8 +177,12 @@ export class ContainerController {
     @Param('connectionUuid') setupDockerDto: SetupDockerDto,
     @Param('containerId') containerId: string,
   ) {
-    if (!customRequest.user.id) throw new InvalidCredentialsException();
-    return this.containerService.restartContainer(setupDockerDto, containerId);
+    const userId = customRequest.user.id;
+    if (!userId) throw new InvalidCredentialsException();
+
+    const result = await this.containerService.restartContainer(setupDockerDto, containerId);
+
+    return { result, message: 'Container restarted successfully' }
   }
 
   @Get(':containerId/:connectionUuid/logs')
@@ -196,8 +200,12 @@ export class ContainerController {
     @Param('connectionUuid') setupDockerDto: SetupDockerDto,
     @Param('containerId') containerId: string,
   ) {
-    if (!customRequest.user.id) throw new InvalidCredentialsException();
-    return this.containerService.getContainerLogs(setupDockerDto, containerId);
+    const userId = customRequest.user.id;
+    if (!userId) throw new InvalidCredentialsException();
+
+    const result = await this.containerService.getContainerLogs(setupDockerDto, containerId);
+
+    return { result, message: 'Container logs retrieved successfully' }
   }
 
   @Post(':containerId/:connectionUuid/pause')
@@ -207,6 +215,7 @@ export class ContainerController {
     description: 'Container paused successfully',
   })
   @ApiParam({ name: 'containerId', description: 'Container ID' })
+  @ApiParam({ name: 'connectionUuid', description: 'Connection UUID' })
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async pauseContainer(
@@ -214,8 +223,13 @@ export class ContainerController {
     @Param('connectionUuid') setupDockerDto: SetupDockerDto,
     @Param('containerId') containerId: string,
   ) {
-    if (!customRequest.user.id) throw new InvalidCredentialsException();
-    return this.containerService.pauseContainer(setupDockerDto, containerId);
+    const userId = customRequest.user.id;
+
+    if (!userId) throw new InvalidCredentialsException();
+
+    const result = await this.containerService.pauseContainer(setupDockerDto, containerId);
+
+    return { result, message: "Container paused successfully" }
   }
 
   @Post(':containerId/:connectionUuid/unpause')
@@ -232,11 +246,16 @@ export class ContainerController {
     @Param('connectionUuid') setupDockerDto: SetupDockerDto,
     @Param('containerId') containerId: string,
   ) {
-    if (!customRequest.user.id) throw new InvalidCredentialsException();
-    return this.containerService.unpauseContainer(setupDockerDto, containerId);
+    const userId = customRequest.user.id;
+
+    if (!userId) throw new InvalidCredentialsException();
+
+    const result = await this.containerService.unpauseContainer(setupDockerDto, containerId);
+
+    return { result, message: "Container unpaused successfully" }
   }
 
-  //TODO: REFACTOR THIS & CHECK THIS
+
   @Post(':connectionUuid/prune')
   @ApiOperation({ summary: 'Prune containers' })
   @ApiResponse({
@@ -250,8 +269,13 @@ export class ContainerController {
     @Req() customRequest: CustomRequest,
     @Param('connectionUuid') setupDockerDto: SetupDockerDto,
   ) {
-    if (!customRequest.user.id) throw new InvalidCredentialsException();
-    return this.containerService.pruneContainers(setupDockerDto);
+    const userId = customRequest.user.id;
+
+    if (!userId) throw new InvalidCredentialsException();
+
+    const result = await this.containerService.pruneContainers(setupDockerDto);
+
+    return { result, message: "Containers pruned successfully" }
   }
 
   @Get(':containerId/:connectionUuid/stats')
@@ -269,9 +293,15 @@ export class ContainerController {
     @Param('connectionUuid') setupDockerDto: SetupDockerDto,
     @Param('containerId') containerId: string,
   ) {
-    if (!customRequest.user.id) throw new InvalidCredentialsException();
-    return this.containerService.getContainerStats(setupDockerDto, containerId);
+    const userId = customRequest.user.id;
+
+    if (!userId) throw new InvalidCredentialsException();
+
+    const result = await this.containerService.getContainerStats(setupDockerDto, containerId);
+
+    return { result, message: "Container stats retrieved successfully" }
   }
+
 
   @Post(':containerUuid/health-check')
   @ApiOperation({ summary: 'Configure container health check' })
@@ -294,12 +324,12 @@ export class ContainerController {
       startPeriod: number;
     },
   ) {
-    return this.containerService.configureHealthCheck(
-      req.user.id,
+    const result = await this.containerService.configureHealthCheck(req.user.id,
       req.headers.connectionuuid,
       setupDockerDto.connectionUuid,
-      config,
-    );
+      config)
+
+    return { result, message: "Container health check configured successfully" }
   }
 
   @Get(':containerUuid/events')
@@ -316,12 +346,16 @@ export class ContainerController {
     @Param('containerUuid') containerUuid: string,
     @Query('limit') limit?: number,
   ) {
-    return this.containerService.getContainerEvents(
-      req.user.id,
-      req.headers.connectionuuid,
-      containerUuid,
-      limit,
-    );
+    const userId = req.user.id;
+
+    if (!userId) throw new InvalidCredentialsException();
+
+    const result = await this.containerService.getContainerEvents(userId, req.headers.connectionuuid, containerUuid, limit);
+
+    return { result, message: "Container events retrieved successfully" }
   }
+
+
+
 }
 

@@ -21,7 +21,7 @@ export class VolumeService {
     private readonly prisma: PrismaService,
     private readonly connectionService: ConnectionService,
     private readonly connectionChecker: ConnectionChecker,
-  ) {}
+  ) { }
 
   private initializeDocker(connection: any) {
     this.docker = new Dockerode({
@@ -32,6 +32,7 @@ export class VolumeService {
         cert: connection.tlsConfig['cert'],
         key: connection.tlsConfig['key'],
       }),
+      timeout: connection.connectionTimeout || 30000,
     });
   }
 

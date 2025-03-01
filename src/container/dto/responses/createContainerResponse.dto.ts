@@ -9,7 +9,6 @@ export class CreateContainerResponseDto {
     description: 'Success message',
     example: 'Container created successfully',
   })
-  message: string;
 
   @ApiProperty({
     description: 'Container details',

@@ -159,24 +159,29 @@ model User {
 }
 
 model Connection {
-  id                 Int                 @id @default(autoincrement())
-  uuid               String              @unique @default(uuid())
-  name               String
-  host               String
-  port               Int
-  tlsConfig          Json?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  userId             Int
-  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  containers         Container[]
-  composeDeployments ComposeDeployment[]
-  images             Image[]
-  networks           Network[]
-  volumes            Volume[]
-  backups            Backup[] // Relation to backups
-  restores           Restore[] // Relation to restores
-  backupSchedules    BackupSchedule[] // Relation to backup schedules
+  id                   Int                 @id @default(autoincrement())
+  uuid                 String              @unique @default(uuid())
+  name                 String
+  host                 String
+  port                 Int
+  tlsConfig            Json?
+  autoReconnect        Boolean             @default(false)
+  connectionTimeout    Int                 @default(30000) // Default 30 seconds
+  encryptedCredentials String?
+  encryptedCredentialsIv String?
+  location             String?             // Physical or logical location of the Docker server
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  userId               Int
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  containers           Container[]
+  composeDeployments   ComposeDeployment[]
+  images               Image[]
+  networks             Network[]
+  volumes              Volume[]
+  backups              Backup[] // Relation to backups
+  restores             Restore[] // Relation to restores
+  backupSchedules      BackupSchedule[] // Relation to backup schedules
 
   @@index([userId])
   @@map("connections")

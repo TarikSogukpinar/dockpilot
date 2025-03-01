@@ -5,6 +5,8 @@ export interface Connection {
   host: string;
   port: number;
   tlsConfig?: any;
+  autoReconnect?: boolean;
+  connectionTimeout?: number;
   createdAt: Date;
   updatedAt: Date;
   userId: number;

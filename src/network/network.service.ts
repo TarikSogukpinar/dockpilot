@@ -31,6 +31,7 @@ export class NetworkService {
         cert: connection.tlsConfig['cert'],
         key: connection.tlsConfig['key'],
       }),
+      timeout: connection.connectionTimeout || 30000,
     });
   }
 
