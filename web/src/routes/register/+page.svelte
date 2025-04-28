@@ -16,19 +16,19 @@
     error = null;
 
     if (password !== confirmPassword) {
-      error = 'Şifreler eşleşmiyor.';
+      error = 'Passwords do not match.';
       loading = false;
       return;
     }
 
     try {
-      // Gerçek uygulamada burada API çağrısı yapılır
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simüle edilmiş gecikme
+      // API call would happen here in a real app
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulated delay
 
-      // Başarılı kayıt simülasyonu
+      // Successful registration simulation
       goto('/login');
     } catch (err) {
-      error = 'Kayıt yapılamadı. Lütfen bilgilerinizi kontrol edin.';
+      error = 'Registration failed. Please check your information.';
     } finally {
       loading = false;
     }
@@ -36,7 +36,7 @@
 </script>
 
 <svelte:head>
-  <title>Kayıt Ol - DockPilot</title>
+  <title>Register - DockPilot</title>
 </svelte:head>
 
 <div
@@ -48,7 +48,7 @@
     <h3
       class="text-slate-900 dark:text-white lg:text-3xl text-2xl font-bold mb-8 text-center"
     >
-      Hesap Oluştur
+      Create Account
     </h3>
 
     {#if error}
@@ -56,7 +56,7 @@
         class="mb-6 bg-red-100 border border-red-400 text-red-700 dark:bg-red-900 dark:text-red-200 dark:border-red-700 px-4 py-3 rounded relative"
         role="alert"
       >
-        <strong class="font-bold">Hata!</strong>
+        <strong class="font-bold">Error!</strong>
         <span class="block sm:inline">{error}</span>
       </div>
     {/if}
@@ -66,7 +66,7 @@
         <label
           for="fullName"
           class="text-sm text-gray-700 dark:text-gray-200 font-medium mb-2 block"
-          >Ad Soyad</label
+          >Full Name</label
         >
         <input
           id="fullName"
@@ -75,7 +75,7 @@
           required
           bind:value={fullName}
           class="bg-slate-100 dark:bg-gray-700 w-full text-sm text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 px-4 py-3 rounded-md outline-none border border-transparent focus:border-blue-500 focus:bg-transparent dark:focus:border-blue-500 transition duration-150 ease-in-out"
-          placeholder="Adınızı ve soyadınızı girin"
+          placeholder="Enter your full name"
         />
       </div>
 
@@ -83,7 +83,7 @@
         <label
           for="email"
           class="text-sm text-gray-700 dark:text-gray-200 font-medium mb-2 block"
-          >E-posta</label
+          >Email</label
         >
         <input
           id="email"
@@ -93,7 +93,7 @@
           required
           bind:value={email}
           class="bg-slate-100 dark:bg-gray-700 w-full text-sm text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 px-4 py-3 rounded-md outline-none border border-transparent focus:border-blue-500 focus:bg-transparent dark:focus:border-blue-500 transition duration-150 ease-in-out"
-          placeholder="E-posta adresinizi girin"
+          placeholder="Enter your email"
         />
       </div>
 
@@ -101,7 +101,7 @@
         <label
           for="password"
           class="text-sm text-gray-700 dark:text-gray-200 font-medium mb-2 block"
-          >Şifre</label
+          >Password</label
         >
         <input
           id="password"
@@ -110,7 +110,7 @@
           required
           bind:value={password}
           class="bg-slate-100 dark:bg-gray-700 w-full text-sm text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 px-4 py-3 rounded-md outline-none border border-transparent focus:border-blue-500 focus:bg-transparent dark:focus:border-blue-500 transition duration-150 ease-in-out"
-          placeholder="Şifrenizi oluşturun"
+          placeholder="Create your password"
         />
       </div>
 
@@ -118,7 +118,7 @@
         <label
           for="confirmPassword"
           class="text-sm text-gray-700 dark:text-gray-200 font-medium mb-2 block"
-          >Şifre Tekrar</label
+          >Confirm Password</label
         >
         <input
           id="confirmPassword"
@@ -127,7 +127,7 @@
           required
           bind:value={confirmPassword}
           class="bg-slate-100 dark:bg-gray-700 w-full text-sm text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 px-4 py-3 rounded-md outline-none border border-transparent focus:border-blue-500 focus:bg-transparent dark:focus:border-blue-500 transition duration-150 ease-in-out"
-          placeholder="Şifrenizi tekrar girin"
+          placeholder="Enter your password again"
         />
       </div>
 
@@ -143,9 +143,7 @@
           for="terms"
           class="ml-2 block text-sm text-gray-700 dark:text-gray-200"
         >
-          <span
-            >Kullanım şartlarını ve gizlilik politikasını kabul ediyorum</span
-          >
+          <span>I agree to the terms of service and privacy policy</span>
         </label>
       </div>
 
@@ -176,9 +174,9 @@
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            Kayıt Yapılıyor...
+            Registering...
           {:else}
-            Kayıt Ol
+            Register
           {/if}
         </button>
       </div>
@@ -187,16 +185,16 @@
     <div class="my-6 flex items-center gap-4">
       <hr class="w-full border-slate-300 dark:border-gray-600" />
       <p class="text-sm text-gray-500 dark:text-gray-400 text-center shrink-0">
-        veya
+        or
       </p>
       <hr class="w-full border-slate-300 dark:border-gray-600" />
     </div>
 
     <p class="text-sm text-gray-700 dark:text-gray-200 mt-8 text-center">
-      Zaten hesabınız var mı? <a
+      Already have an account? <a
         href="/login"
         class="text-blue-600 dark:text-blue-400 font-medium hover:underline ml-1"
-        >Giriş Yapın</a
+        >Sign In</a
       >
     </p>
   </div>
