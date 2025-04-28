@@ -40,187 +40,164 @@
 </svelte:head>
 
 <div
-  class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-800 py-12 px-4 sm:px-6 lg:px-8"
+  class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8"
 >
-  <div class="max-w-md w-full bg-white rounded-lg shadow-xl overflow-hidden">
-    <div class="bg-slate-800 py-6">
-      <div class="flex justify-center">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-12 w-12 text-blue-400"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-          />
-        </svg>
+  <div class="max-w-md w-full p-8 sm:p-10">
+    <!-- Logo Yok -->
+
+    <h3
+      class="text-slate-900 dark:text-white lg:text-3xl text-2xl font-bold mb-8 text-center"
+    >
+      Hesap Oluştur
+    </h3>
+
+    {#if error}
+      <div
+        class="mb-6 bg-red-100 border border-red-400 text-red-700 dark:bg-red-900 dark:text-red-200 dark:border-red-700 px-4 py-3 rounded relative"
+        role="alert"
+      >
+        <strong class="font-bold">Hata!</strong>
+        <span class="block sm:inline">{error}</span>
       </div>
-      <h2 class="mt-2 text-center text-2xl font-bold text-white">
-        DockPilot'a Kaydolun
-      </h2>
-      <p class="mt-2 text-center text-sm text-gray-300">
-        Docker konteynerlerinizi yönetmek için hesap oluşturun
-      </p>
-    </div>
+    {/if}
 
-    <div class="p-8">
-      {#if error}
-        <div
-          class="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded"
+    <form class="space-y-6" on:submit|preventDefault={handleRegister}>
+      <div>
+        <label
+          for="fullName"
+          class="text-sm text-gray-700 dark:text-gray-200 font-medium mb-2 block"
+          >Ad Soyad</label
         >
-          <p>{error}</p>
-        </div>
-      {/if}
+        <input
+          id="fullName"
+          name="fullName"
+          type="text"
+          required
+          bind:value={fullName}
+          class="bg-slate-100 dark:bg-gray-700 w-full text-sm text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 px-4 py-3 rounded-md outline-none border border-transparent focus:border-blue-500 focus:bg-transparent dark:focus:border-blue-500 transition duration-150 ease-in-out"
+          placeholder="Adınızı ve soyadınızı girin"
+        />
+      </div>
 
-      <form class="space-y-6" on:submit|preventDefault={handleRegister}>
-        <div>
-          <label for="fullName" class="block text-sm font-medium text-gray-700">
-            Ad Soyad
-          </label>
-          <div class="mt-1">
-            <input
-              id="fullName"
-              name="fullName"
-              type="text"
-              required
-              bind:value={fullName}
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="Ad Soyad"
-            />
-          </div>
-        </div>
+      <div>
+        <label
+          for="email"
+          class="text-sm text-gray-700 dark:text-gray-200 font-medium mb-2 block"
+          >E-posta</label
+        >
+        <input
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+          bind:value={email}
+          class="bg-slate-100 dark:bg-gray-700 w-full text-sm text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 px-4 py-3 rounded-md outline-none border border-transparent focus:border-blue-500 focus:bg-transparent dark:focus:border-blue-500 transition duration-150 ease-in-out"
+          placeholder="E-posta adresinizi girin"
+        />
+      </div>
 
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">
-            E-posta Adresi
-          </label>
-          <div class="mt-1">
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autocomplete="email"
-              required
-              bind:value={email}
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="ornek@email.com"
-            />
-          </div>
-        </div>
+      <div>
+        <label
+          for="password"
+          class="text-sm text-gray-700 dark:text-gray-200 font-medium mb-2 block"
+          >Şifre</label
+        >
+        <input
+          id="password"
+          name="password"
+          type="password"
+          required
+          bind:value={password}
+          class="bg-slate-100 dark:bg-gray-700 w-full text-sm text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 px-4 py-3 rounded-md outline-none border border-transparent focus:border-blue-500 focus:bg-transparent dark:focus:border-blue-500 transition duration-150 ease-in-out"
+          placeholder="Şifrenizi oluşturun"
+        />
+      </div>
 
-        <div>
-          <label for="password" class="block text-sm font-medium text-gray-700">
-            Şifre
-          </label>
-          <div class="mt-1">
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              bind:value={password}
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="••••••••"
-            />
-          </div>
-        </div>
+      <div>
+        <label
+          for="confirmPassword"
+          class="text-sm text-gray-700 dark:text-gray-200 font-medium mb-2 block"
+          >Şifre Tekrar</label
+        >
+        <input
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          required
+          bind:value={confirmPassword}
+          class="bg-slate-100 dark:bg-gray-700 w-full text-sm text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 px-4 py-3 rounded-md outline-none border border-transparent focus:border-blue-500 focus:bg-transparent dark:focus:border-blue-500 transition duration-150 ease-in-out"
+          placeholder="Şifrenizi tekrar girin"
+        />
+      </div>
 
-        <div>
-          <label
-            for="confirmPassword"
-            class="block text-sm font-medium text-gray-700"
+      <div class="flex items-center pt-1">
+        <input
+          id="terms"
+          name="terms"
+          type="checkbox"
+          required
+          class="h-4 w-4 text-blue-600 dark:text-blue-500 focus:ring-blue-500 border-slate-300 dark:border-gray-600 rounded dark:bg-gray-700"
+        />
+        <label
+          for="terms"
+          class="ml-2 block text-sm text-gray-700 dark:text-gray-200"
+        >
+          <span
+            >Kullanım şartlarını ve gizlilik politikasını kabul ediyorum</span
           >
-            Şifre Tekrar
-          </label>
-          <div class="mt-1">
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              required
-              bind:value={confirmPassword}
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="••••••••"
-            />
-          </div>
-        </div>
+        </label>
+      </div>
 
-        <div class="flex items-center">
-          <input
-            id="terms"
-            name="terms"
-            type="checkbox"
-            required
-            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <label for="terms" class="ml-2 block text-sm text-gray-700">
-            <span
-              >Kullanım şartlarını ve gizlilik politikasını kabul ediyorum</span
+      <div class="!mt-10">
+        <button
+          type="submit"
+          disabled={loading}
+          class="w-full shadow-xl py-2.5 px-4 text-sm font-semibold rounded-md text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-60 disabled:cursor-not-allowed transition duration-150 ease-in-out flex items-center justify-center"
+        >
+          {#if loading}
+            <svg
+              class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
             >
-          </label>
-        </div>
-
-        <div>
-          <button
-            type="submit"
-            disabled={loading}
-            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {#if loading}
-              <svg
-                class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  class="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Kayıt Yapılıyor...
-            {:else}
-              Kayıt Ol
-            {/if}
-          </button>
-        </div>
-      </form>
-
-      <div class="mt-6">
-        <div class="relative">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-gray-300"></div>
-          </div>
-          <div class="relative flex justify-center text-sm">
-            <span class="px-2 bg-white text-gray-500">
-              Zaten hesabınız var mı?
-            </span>
-          </div>
-        </div>
-
-        <div class="mt-6">
-          <a
-            href="/login"
-            class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Giriş Yap
-          </a>
-        </div>
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            Kayıt Yapılıyor...
+          {:else}
+            Kayıt Ol
+          {/if}
+        </button>
       </div>
+    </form>
+
+    <div class="my-6 flex items-center gap-4">
+      <hr class="w-full border-slate-300 dark:border-gray-600" />
+      <p class="text-sm text-gray-500 dark:text-gray-400 text-center shrink-0">
+        veya
+      </p>
+      <hr class="w-full border-slate-300 dark:border-gray-600" />
     </div>
+
+    <p class="text-sm text-gray-700 dark:text-gray-200 mt-8 text-center">
+      Zaten hesabınız var mı? <a
+        href="/login"
+        class="text-blue-600 dark:text-blue-400 font-medium hover:underline ml-1"
+        >Giriş Yapın</a
+      >
+    </p>
   </div>
 </div>

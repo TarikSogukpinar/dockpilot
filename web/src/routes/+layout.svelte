@@ -76,7 +76,7 @@
   </div>
 
   <!-- Footer - tüm sayfalarda göster -->
-  <footer class="bg-white py-4 shadow-inner mt-auto">
+  <!-- <footer class="bg-white py-4 shadow-inner mt-auto">
     <div class="max-w-7xl mx-auto px-4">
       <div class="flex justify-between items-center">
         <div class="text-sm text-gray-500">
@@ -98,5 +98,5 @@
         </div>
       </div>
     </div>
-  </footer>
+  </footer> -->
 </div>

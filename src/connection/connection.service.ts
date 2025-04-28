@@ -226,7 +226,7 @@ export class ConnectionService {
       });
 
       if (!connection) {
-        throw new NotFoundException('Connection not found or access denied');
+        throw new NotFoundException();
       }
 
       return connection;
