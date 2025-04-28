@@ -1,30 +1,30 @@
 <script>
   import { goto } from '$app/navigation';
-  
+
   let fullName = '';
   let email = '';
   let password = '';
   let confirmPassword = '';
   let loading = false;
   /**
-     * @type {string | null}
-     */
+   * @type {string | null}
+   */
   let error = null;
-  
+
   async function handleRegister() {
     loading = true;
     error = null;
-    
+
     if (password !== confirmPassword) {
       error = 'Şifreler eşleşmiyor.';
       loading = false;
       return;
     }
-    
+
     try {
       // Gerçek uygulamada burada API çağrısı yapılır
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simüle edilmiş gecikme
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simüle edilmiş gecikme
+
       // Başarılı kayıt simülasyonu
       goto('/login');
     } catch (err) {
@@ -39,12 +39,25 @@
   <title>Kayıt Ol - DockPilot</title>
 </svelte:head>
 
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-800 py-12 px-4 sm:px-6 lg:px-8">
+<div
+  class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-800 py-12 px-4 sm:px-6 lg:px-8"
+>
   <div class="max-w-md w-full bg-white rounded-lg shadow-xl overflow-hidden">
     <div class="bg-slate-800 py-6">
       <div class="flex justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-12 w-12 text-blue-400"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+          />
         </svg>
       </div>
       <h2 class="mt-2 text-center text-2xl font-bold text-white">
@@ -54,14 +67,16 @@
         Docker konteynerlerinizi yönetmek için hesap oluşturun
       </p>
     </div>
-    
+
     <div class="p-8">
       {#if error}
-        <div class="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded">
+        <div
+          class="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded"
+        >
           <p>{error}</p>
         </div>
       {/if}
-      
+
       <form class="space-y-6" on:submit|preventDefault={handleRegister}>
         <div>
           <label for="fullName" class="block text-sm font-medium text-gray-700">
@@ -116,7 +131,10 @@
         </div>
 
         <div>
-          <label for="confirmPassword" class="block text-sm font-medium text-gray-700">
+          <label
+            for="confirmPassword"
+            class="block text-sm font-medium text-gray-700"
+          >
             Şifre Tekrar
           </label>
           <div class="mt-1">
@@ -141,7 +159,9 @@
             class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
           <label for="terms" class="ml-2 block text-sm text-gray-700">
-            <span>Kullanım şartlarını ve gizlilik politikasını kabul ediyorum</span>
+            <span
+              >Kullanım şartlarını ve gizlilik politikasını kabul ediyorum</span
+            >
           </label>
         </div>
 
@@ -152,9 +172,25 @@
             class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {#if loading}
-              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
               Kayıt Yapılıyor...
             {:else}
@@ -187,4 +223,4 @@
       </div>
     </div>
   </div>
-</div> 
+</div>

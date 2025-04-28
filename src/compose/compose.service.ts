@@ -23,7 +23,7 @@ export class ComposeService {
     private readonly prismaService: PrismaService,
     private readonly connectionService: ConnectionService,
     private readonly connectionChecker: ConnectionChecker,
-  ) {}
+  ) { }
 
   private initializeDocker(connection: any) {
     this.docker = new Dockerode({
