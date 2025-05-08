@@ -1,12 +1,13 @@
 import { auth } from '../stores/auth';
 import { get } from 'svelte/store';
+import { config } from '../config';
 
-const API_URL = 'http://localhost:3000/api/v1';
+const API_URL = config.apiBaseUrl;
 
 /**
  * @typedef {Object} ApiOptions
  * @property {string} [method]
- * @property {Object} [headers]
+ * @property {Record<string, string>} [headers]
  * @property {string} [body]
  */
 
@@ -16,6 +17,7 @@ const API_URL = 'http://localhost:3000/api/v1';
  */
 async function fetchWithAuth(endpoint, options = {}) {
     const authState = get(auth);
+    /** @type {Record<string, string>} */
     const headers = {
         'Content-Type': 'application/json',
         ...(options.headers || {})
@@ -73,7 +75,26 @@ export const api = {
                 body: JSON.stringify({ email, password, name })
             });
             return data;
+        },
+        /**
+         * Fetch current user profile data 
+         * @returns {Promise<Object>} User profile data
+         */
+        me: async () => {
+            const data = await fetchWithAuth('/users/me');
+            return data;
         }
+    },
+    users: {
+        /**
+         * Update user profile
+         * @param {Object} profileData - Profile data to update
+         * @returns {Promise<Object>} Updated user data
+         */
+        updateProfile: (profileData) => fetchWithAuth('/users/profile', {
+            method: 'POST',
+            body: JSON.stringify(profileData)
+        })
     },
     containers: {
         list: () => fetchWithAuth('/containers'),

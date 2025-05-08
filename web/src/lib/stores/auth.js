@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
+import { config, getApiUrl } from '../config';
 
 // Types
 /**
@@ -16,11 +17,8 @@ import { browser } from '$app/environment';
  * @property {User|null} user
  */
 
-// Initial state from localStorage if available
-const storedAuth = browser ? localStorage.getItem('auth') : null;
-
 /** @type {AuthState} */
-const initialState = storedAuth ? JSON.parse(storedAuth) : {
+const initialState = {
     isAuthenticated: false,
     token: null,
     user: null
@@ -37,14 +35,15 @@ const createAuthStore = () => {
          */
         login: (token, user) => {
             const authState = { isAuthenticated: true, token, user };
-            if (browser) {
-                localStorage.setItem('auth', JSON.stringify(authState));
-            }
             set(authState);
         },
         logout: () => {
+            // Send request to logout endpoint to clear the cookie
             if (browser) {
-                localStorage.removeItem('auth');
+                fetch(getApiUrl(config.auth.logout), {
+                    method: 'POST',
+                    credentials: 'include'
+                }).catch(err => console.error('Logout error:', err));
             }
             set({ isAuthenticated: false, token: null, user: null });
         },
@@ -54,9 +53,6 @@ const createAuthStore = () => {
         updateUser: (user) => {
             update(state => {
                 const newState = { ...state, user };
-                if (browser) {
-                    localStorage.setItem('auth', JSON.stringify(newState));
-                }
                 return newState;
             });
         }

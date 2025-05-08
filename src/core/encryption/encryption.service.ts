@@ -10,8 +10,6 @@ export class EncryptionService {
     encrypt(text: string): { encryptedData: string; iv: string } {
         const cipher = crypto.createCipheriv(this.algorithm, this.key, this.iv);
 
-        console.log(cipher, "cipher")
-
         let encrypted = cipher.update(text, 'utf8', 'hex');
         encrypted += cipher.final('hex');
         return {

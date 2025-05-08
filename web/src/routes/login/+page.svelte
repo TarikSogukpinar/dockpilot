@@ -1,5 +1,7 @@
 <script>
   import { goto } from '$app/navigation';
+  import { auth } from '$lib/stores/auth';
+  import { config, getApiUrl } from '$lib/config';
 
   let email = '';
   let password = '';
@@ -15,14 +17,51 @@
     error = null;
 
     try {
-      // API call would happen here in a real app
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulated delay
+      const response = await fetch(getApiUrl(config.auth.login), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+        credentials: 'include',
+      });
 
-      // Successful login simulation
-      localStorage.setItem('token', 'sample-jwt-token');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      console.log('Login response:', data);
+
+      const token = data.result?.accessToken || data.token || data.accessToken;
+
+      if (!token) {
+        throw new Error('No token received from server');
+      }
+
+      if (rememberMe) {
+        document.cookie = `${config.cookies.authToken}=${token}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Strict`;
+      } else {
+        document.cookie = `${config.cookies.authToken}=${token}; path=/; SameSite=Strict`;
+      }
+
+      auth.login(token, {
+        id: data.result?.userId || '',
+        email: email,
+        name: data.result?.name || email.split('@')[0],
+      });
+
       goto('/');
     } catch (err) {
-      error = 'Login failed. Please check your credentials.';
+      console.error('Login error:', err);
+      error =
+        err instanceof Error
+          ? err.message
+          : 'Login failed. Please check your credentials.';
     } finally {
       loading = false;
     }

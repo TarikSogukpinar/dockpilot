@@ -14,7 +14,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const request = context.switchToHttp().getRequest();
     const authHeader = request.headers['authorization'];
 
-    // Authorization başlığı yoksa hata fırlatıyoruz
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedException(
         'Authorization header must include Bearer token',

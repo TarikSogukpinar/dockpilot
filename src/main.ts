@@ -11,6 +11,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: console,
   });
+  app.enableCors({
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true,
+  });
   const configService = app.get(ConfigService);
   app.setGlobalPrefix(
     configService.get<string>('API_GLOBAL_PREFIX', { infer: true }),

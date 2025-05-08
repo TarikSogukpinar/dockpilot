@@ -1,7 +1,7 @@
 <script>
   import { goto } from '$app/navigation';
 
-  let fullName = '';
+  let name = '';
   let email = '';
   let password = '';
   let confirmPassword = '';
@@ -22,13 +22,31 @@
     }
 
     try {
-      // API call would happen here in a real app
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulated delay
+      const response = await fetch('http://localhost:5000/api/v1/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password
+        })
+      });
 
-      // Successful registration simulation
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
+
+      // Successful response, read the body data if needed
+      const responseData = await response.json().catch(() => ({}));
+      console.log('Registration successful:', responseData);
+
+      // Registration successful
       goto('/login');
     } catch (err) {
-      error = 'Registration failed. Please check your information.';
+      error = err instanceof Error ? err.message : 'Registration failed. Please check your information.';
     } finally {
       loading = false;
     }
@@ -64,16 +82,16 @@
     <form class="space-y-6" on:submit|preventDefault={handleRegister}>
       <div>
         <label
-          for="fullName"
+          for="name"
           class="text-sm text-gray-700 dark:text-gray-200 font-medium mb-2 block"
           >Full Name</label
         >
         <input
-          id="fullName"
-          name="fullName"
+          id="name"
+          name="name"
           type="text"
           required
-          bind:value={fullName}
+          bind:value={name}
           class="bg-slate-100 dark:bg-gray-700 w-full text-sm text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 px-4 py-3 rounded-md outline-none border border-transparent focus:border-blue-500 focus:bg-transparent dark:focus:border-blue-500 transition duration-150 ease-in-out"
           placeholder="Enter your full name"
         />

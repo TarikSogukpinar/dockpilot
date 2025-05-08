@@ -83,9 +83,62 @@
 
 <div class="min-h-screen bg-gray-50 p-4">
   <!-- Dashboard Header -->
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">Docker Dashboard</h1>
-    <p class="text-gray-600">Manage and monitor your Docker containers</p>
+  <div class="mb-8 flex justify-between items-center">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">Docker Dashboard</h1>
+      <p class="text-gray-600">Manage and monitor your Docker containers</p>
+    </div>
+    <div class="flex gap-3">
+      <div class="relative group">
+        <button
+          class="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-sm flex items-center gap-2 transition-colors border border-gray-200"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 text-blue-500"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <span>Profilim</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
+          <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <div class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              </svg>
+              Profili Düzenle
+            </div>
+          </a>
+          <a href="/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <div class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+              </svg>
+              Ayarlar
+            </div>
+          </a>
+          <div class="border-t border-gray-100 my-1"></div>
+          <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <div class="flex items-center text-red-600">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm11 3a1 1 0 10-2 0v6.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L14 12.586V6z" clip-rule="evenodd" />
+              </svg>
+              Çıkış Yap
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   {#if error}
@@ -112,7 +165,7 @@
   {/if}
 
   <!-- Quick Actions -->
-  <div class="flex gap-4 mb-8">
+  <div class="flex flex-wrap gap-4 mb-8">
     <button
       class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-colors"
     >
@@ -128,7 +181,7 @@
           clip-rule="evenodd"
         />
       </svg>
-      New Container
+      Yeni Container
     </button>
     <button
       class="bg-white hover:bg-gray-50 text-gray-700 px-6 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-colors border border-gray-200"
@@ -145,8 +198,26 @@
           clip-rule="evenodd"
         />
       </svg>
-      Pull Image
+      Image Çek
     </button>
+    <a
+      href="/profile"
+      class="bg-white hover:bg-gray-50 text-gray-700 px-6 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-colors border border-gray-200"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5 text-blue-500"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      Profil Ayarları
+    </a>
   </div>
 
   <!-- System Overview Cards -->
