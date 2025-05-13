@@ -5,6 +5,14 @@
   import { auth } from '$lib/stores/auth';
   import { config, getApiUrl } from '$lib/config';
   import { api } from '$lib/services/api';
+  import { goto } from '$app/navigation';
+
+  // Auth store değişiklikleri için reaktif deyim
+  $: console.log('Auth store in profile page:', { 
+    isAuthenticated: $auth.isAuthenticated,
+    hasToken: !!$auth.token,
+    hasUser: !!$auth.user
+  });
 
   let profileData = {
     name: '',
@@ -29,26 +37,27 @@
   let successMessage = null;
 
   onMount(async () => {
+    console.log('Profile page onMount starting');
     try {
       loading = true;
+      
       // Auth store'dan kullanıcı bilgilerini al
       if ($auth.user) {
+        console.log('Setting profile data from auth store:', $auth.user);
         profileData.name = $auth.user.name || '';
         profileData.email = $auth.user.email || '';
-        // TS hatası için tip kontrolü ekleyelim
-        if ('role' in $auth.user) {
-          profileData.role = $auth.user.role || 'user';
-        } else {
-          profileData.role = 'user';
-        }
+        profileData.role = $auth.user.role || 'user';
+      } else {
+        console.warn('No user data in auth store, might redirect to login');
       }
 
       // API'den kullanıcı profil bilgilerini al
       if ($auth.token) {
         try {
+          console.log('Fetching profile data from API with token:', $auth.token.substring(0, 15) + '...');
           // api/v1/users/me endpoint'ini kullan
           const userData = await api.auth.me();
-          console.log('User profile data:', userData);
+          console.log('User profile data from API:', userData);
 
           // API'den gelen bilgilerle profil datasını güncelle
           if (userData) {
@@ -57,17 +66,33 @@
               name: userData.name || profileData.name,
               email: userData.email || profileData.email,
               role: userData.role || profileData.role,
-              company: userData.company || '',
-              phone: userData.phone || '',
-              avatar: userData.avatarUrl || '',
-              theme: userData.preferences?.theme || 'light',
-              language: userData.preferences?.language || 'tr',
+              // Profil alanları kullanılabilirlik kontrolü ile alınır
+              company: userData?.profile?.company || '',
+              phone: userData?.profile?.phone || '',
+              avatar: userData?.profile?.avatarUrl || '',
+              theme: userData?.profile?.theme || 'light',
+              language: userData?.profile?.language || 'tr',
             };
+            
+            // Auth store'u güncelle
+            if ($auth.user) {
+              auth.updateUser({
+                ...$auth.user,
+                name: userData.name || $auth.user.name,
+                email: userData.email || $auth.user.email,
+                role: userData.role || $auth.user.role
+              });
+            }
+            
+            console.log('Profile data updated successfully');
           }
         } catch (apiError) {
           console.error('API Error:', apiError);
           error = apiError instanceof Error ? apiError.message : 'Failed to load profile data';
         }
+      } else {
+        console.error('No token available for API call');
+        error = 'Unable to authenticate. Please try logging in again.';
       }
     } catch (err) {
       console.error('Failed to load profile data:', err);
@@ -75,6 +100,7 @@
         err instanceof Error ? err.message : 'Failed to load profile data';
     } finally {
       loading = false;
+      console.log('Profile page loading completed');
     }
   });
 

@@ -105,7 +105,6 @@ enum ContainerAction {
   UPDATE
 }
 
-// Backup related enums
 enum BackupType {
   FULL
   INCREMENTAL
@@ -317,6 +316,8 @@ model Profile {
   containerAlerts      Boolean   @default(true) // Container durum bildirimleri
   resourceAlerts       Boolean   @default(true) // Kaynak kullanım bildirimleri
   twoFactorEnabled     Boolean   @default(false) // 2FA aktif mi?
+  twoFactorSecret      String?   // 2FA secret key (verified)
+  twoFactorTempSecret  String?   // Temporary 2FA secret (before verification)
   apiKeyEnabled        Boolean   @default(false) // API Key kullanımı aktif mi?
   lastSecurityScan     DateTime? // Son güvenlik taraması tarihi
   theme                String?   @default("light") // UI teması (light/dark)

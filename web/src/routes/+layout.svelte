@@ -7,21 +7,29 @@
   import { onMount } from 'svelte';
   import { config, getApiUrl } from '$lib/config';
 
-  const publicPaths = ['/', '/login', '/register'];
+  const publicPaths = ['/login', '/register'];
 
-  // Client-side only navigation
+  // Auth durumu
+  let isAuthChecking = true;
+  let isLoggedIn = false;
+
+  // Auth store'dan gelen değişiklikleri izle
+  $: isLoggedIn = $auth.isAuthenticated;
+
+  // Yönlendirme sadece auth kontrolü tamamlandıktan sonra yapılsın
   $: if (
     browser &&
-    !$auth.isAuthenticated &&
+    !isAuthChecking && // Auth kontrolü tamamlandıktan sonra
+    !isLoggedIn &&
     !publicPaths.includes($page.url.pathname)
   ) {
+    console.log('Not authenticated, redirecting to login page');
     goto('/login');
   }
 
-  let isLoggedIn = false;
-
   onMount(async () => {
     try {
+      isAuthChecking = true; // Auth kontrolü başlıyor
       // Check for token in cookie
       const cookies = document.cookie.split(';');
       const tokenCookie = cookies.find((cookie) =>
@@ -29,34 +37,44 @@
       );
       const token = tokenCookie ? tokenCookie.split('=')[1].trim() : null;
 
-      if (token) {
-        console.log('Found token in cookie, validating...'); // Debug için
-        // Try to get user data with the token
-        const response = await fetch(getApiUrl(config.auth.user), {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: 'include',
-        });
+      console.log('Auth cookie check:', {
+        tokenExists: !!token,
+        cookieValue: token ? token.substring(0, 15) + '...' : 'none',
+      });
 
-        if (response.ok) {
-          const userData = await response.json();
-          console.log('User data:', userData); // Debug için
-          // Update auth store with user data and token
-          auth.login(
-            token,
-            userData.result || {
-              id: userData.userId || '',
-              email: userData.email || '',
-              name: userData.name || '',
+      if (token) {
+        console.log('Found token in cookie, validating...');
+        try {
+          // Token'ı API çağrıları için auth store'a ekleyelim
+          auth.setToken(token);
+
+          // Token ile kullanıcı bilgilerini al
+          console.log('Fetching user data from:', getApiUrl(config.auth.me));
+          const userData = await fetch(getApiUrl(config.auth.me), {
+            headers: {
+              Authorization: `Bearer ${token}`,
             },
-          );
-          isLoggedIn = true;
-        } else {
-          console.error('Token validation failed:', await response.text());
-          // Token is invalid
-          document.cookie =
-            `${config.cookies.authToken}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+            credentials: 'include',
+          });
+
+          if (userData.ok) {
+            const user = await userData.json();
+            console.log('User data successfully retrieved:', user);
+
+            // Update auth store with user data and token
+            auth.login(token, user);
+            isLoggedIn = true;
+          } else {
+            const errorText = await userData.text();
+            console.error('Token validation failed:', errorText);
+            console.error('HTTP Status:', userData.status);
+            // Token is invalid
+            document.cookie = `${config.cookies.authToken}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+            isLoggedIn = false;
+          }
+        } catch (error) {
+          console.error('Failed to validate token:', error);
+          document.cookie = `${config.cookies.authToken}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
           isLoggedIn = false;
         }
       } else {
@@ -66,13 +84,15 @@
     } catch (error) {
       console.error('Auth check failed:', error);
       isLoggedIn = false;
+    } finally {
+      isAuthChecking = false; // Auth kontrolü tamamlandı
+      console.log('Auth check completed:', { isLoggedIn });
     }
   });
 
   function handleLogout() {
     // Clear the auth cookie
-    document.cookie =
-      `${config.cookies.authToken}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    document.cookie = `${config.cookies.authToken}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 
     // Update the auth store
     auth.logout();
@@ -84,8 +104,8 @@
 </script>
 
 <div class="min-h-screen bg-gray-100 flex flex-col">
-  <!-- Navigation - sadece giriş yapılmışsa göster -->
-  {#if isLoggedIn && !$page.url.pathname.includes('/login') && !$page.url.pathname.includes('/register')}
+  <!-- Navigation - sadece giriş yapılmışsa ve dashboard sayfasında DEĞİLSE göster -->
+  {#if isLoggedIn && !$page.url.pathname.includes('/login') && !$page.url.pathname.includes('/register') && !$page.url.pathname.includes('/dashboard')}
     <nav class="bg-slate-800 text-white shadow-lg">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex justify-between h-16">
@@ -109,61 +129,59 @@
             </a>
           </div>
           <div class="flex items-center space-x-4">
-            <button
-              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+            <a
+              href="/dashboard"
+              class="flex items-center text-sm font-medium text-white hover:text-gray-200 focus:outline-none"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4 inline mr-1"
+                class="h-5 w-5 mr-1"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+              </svg>
+              <span>Dashboard</span>
+            </a>
+
+            <a
+              href="/profile"
+              class="flex items-center text-sm font-medium text-white hover:text-gray-200 focus:outline-none"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 mr-1"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
                 <path
                   fill-rule="evenodd"
-                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                  d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
                   clip-rule="evenodd"
                 />
               </svg>
-              Yeni Container
+              <span>Profil</span>
+            </a>
+
+            <button
+              on:click={handleLogout}
+              class="flex items-center text-sm font-medium text-white hover:text-gray-200 focus:outline-none"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 mr-1"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm11 3a1 1 0 10-2 0v6.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L14 12.586V6z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <span>Çıkış Yap</span>
             </button>
-            <div class="relative group">
-              <button
-                class="flex items-center text-sm font-medium text-white hover:text-gray-200 focus:outline-none"
-              >
-                <span>Kullanıcı</span>
-                <svg
-                  class="ml-1 h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </button>
-              <div
-                class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block"
-              >
-                <a
-                  href="/profile"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >Profil</a
-                >
-                <a
-                  href="/settings"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >Ayarlar</a
-                >
-                <button
-                  on:click={handleLogout}
-                  class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >Çıkış Yap</button
-                >
-              </div>
-            </div>
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@ export const config = {
      * API endpoint'leri için temel URL
      */
     apiBaseUrl: 'http://localhost:5000/api/v1',
-    
+
     /**
      * Auth ile ilgili endpoint'ler
      */
@@ -17,7 +17,7 @@ export const config = {
         user: '/users/me',
         me: '/users/me'
     },
-    
+
     /**
      * Kullanıcı ile ilgili endpoint'ler
      */
@@ -26,7 +26,7 @@ export const config = {
         updateProfile: '/users/profile',
         changePassword: '/users/change-password'
     },
-    
+
     /**
      * Cookie isimleri
      */

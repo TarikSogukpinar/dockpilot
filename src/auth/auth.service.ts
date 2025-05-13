@@ -2,6 +2,7 @@ import {
   HttpException,
   Injectable,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../database/database.service';
 import { TokenService } from '../core/token/token.service';
@@ -70,10 +71,11 @@ export class AuthService {
     req: Request,
   ): Promise<LoginResponseDto> {
     try {
-      const { email, password } = loginUserDto;
+      const { email, password, twoFactorToken } = loginUserDto;
 
       const user = await this.prismaService.user.findUnique({
         where: { email },
+        include: { profile: true },
       });
 
       if (!user) throw new UserNotFoundException();
@@ -85,6 +87,27 @@ export class AuthService {
 
       if (!isPasswordValid) throw new InvalidCredentialsException();
 
+      // Check if 2FA is enabled
+      if (user.profile?.twoFactorEnabled) {
+        // If 2FA is enabled but no token provided, return partial response
+        if (!twoFactorToken) {
+          return {
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            twoFactorEnabled: true,
+            accessToken: null,
+            refreshToken: null,
+          };
+        }
+
+        // Verify the 2FA token
+        const isTokenValid = await this.verifyTwoFactorToken(user.id, twoFactorToken);
+        if (!isTokenValid) {
+          throw new UnauthorizedException('Invalid two-factor authentication code');
+        }
+      }
+
       const accessToken = await this.tokenService.createAccessToken(user);
       const refreshToken = await this.tokenService.createRefreshToken(user);
 
@@ -93,10 +116,36 @@ export class AuthService {
         data: { accessToken: accessToken },
       });
 
+      // Update login activity in profile
+      await this.prismaService.profile.upsert({
+        where: { userId: user.id },
+        create: {
+          userId: user.id,
+          lastLogin: new Date(),
+          lastActivity: new Date(),
+        },
+        update: {
+          lastLogin: new Date(),
+          lastActivity: new Date(),
+        },
+      });
+
+      // Log the login action
+      await this.prismaService.log.create({
+        data: {
+          action: 'User logged in',
+          userId: user.id,
+          serverId: 0, // Using a default value - adjust as needed
+        },
+      });
+
       return {
         accessToken,
         refreshToken,
         email: user.email,
+        userId: user.id,
+        name: user.name,
+        twoFactorEnabled: user.profile?.twoFactorEnabled || false,
       };
     } catch (error) {
       if (error instanceof HttpException) {
@@ -104,7 +153,7 @@ export class AuthService {
       }
 
       throw new InternalServerErrorException(
-        'An unexpected error occurred while creating ticket',
+        'An unexpected error occurred while logging in',
       );
     }
   }
@@ -209,6 +258,36 @@ export class AuthService {
       throw new InternalServerErrorException(
         'An unexpected error occurred while creating ticket',
       );
+    }
+  }
+
+  /**
+   * Verify a 2FA token
+   */
+  private async verifyTwoFactorToken(userId: number, token: string): Promise<boolean> {
+    try {
+      const user = await this.prismaService.user.findUnique({
+        where: { id: userId },
+        include: { profile: true },
+      });
+
+      if (!user || !user.profile) {
+        return false;
+      }
+
+      // Use string indexing to avoid type errors
+      const secret = user.profile['twoFactorSecret'];
+      if (!secret) {
+        return false;
+      }
+
+      const { authenticator } = require('otplib');
+      return authenticator.verify({
+        token,
+        secret,
+      });
+    } catch (error) {
+      return false;
     }
   }
 }

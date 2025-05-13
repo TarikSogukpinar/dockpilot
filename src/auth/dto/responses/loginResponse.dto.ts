@@ -1,4 +1,4 @@
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsString, IsNumber, IsBoolean, IsOptional } from 'class-validator';
 
 export class LoginResponseDto {
   @IsString()
@@ -9,4 +9,14 @@ export class LoginResponseDto {
 
   @IsEmail()
   email: string;
+
+  @IsNumber()
+  userId: number;
+
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsBoolean()
+  twoFactorEnabled: boolean;
 }

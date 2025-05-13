@@ -12,6 +12,9 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { AuthController } from './auth.controller';
 import { HttpModule } from '@nestjs/axios';
+import { TwoFactorService } from './two-factor/two-factor.service';
+import { TwoFactorController } from './two-factor/two-factor.controller';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -24,15 +27,17 @@ import { HttpModule } from '@nestjs/axios';
     TokenModule,
     PrismaModule,
     HttpModule,
+    ConfigModule,
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, TwoFactorController],
   providers: [
     AuthService,
     PrismaService,
     JwtStrategy,
     GithubStrategy,
     GoogleStrategy,
+    TwoFactorService,
   ],
-  exports: [AuthService],
+  exports: [AuthService, TwoFactorService],
 })
 export class AuthModule {}

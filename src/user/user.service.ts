@@ -8,10 +8,11 @@ import { GetMeResponseDto } from './dto/get-me.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { AccountType } from '@prisma/client';
+import { UserNotFoundException } from 'src/core/handler/exceptions/custom-exception';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) { }
 
   async getMe(userId: number): Promise<GetMeResponseDto> {
     const user = await this.prismaService.user.findUnique({
@@ -38,17 +39,20 @@ export class UserService {
       },
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throw new UserNotFoundException();
 
-    // Update last activity
-    await this.prismaService.profile.update({
+    await this.prismaService.profile.upsert({
       where: { userId: user.id },
-      data: { lastActivity: new Date() },
+      create: {
+        userId: user.id,
+        lastActivity: new Date()
+      },
+      update: { lastActivity: new Date() },
     });
 
-    return user;
+    const { password, ...userWithoutPassword } = user;
+
+    return userWithoutPassword as GetMeResponseDto;
   }
 
   async getUserStats(userId: number) {
@@ -64,9 +68,7 @@ export class UserService {
       },
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throw new UserNotFoundException();
 
     const totalConnections = user.connections.length;
     const totalContainers = user.connections.reduce(
@@ -81,10 +83,15 @@ export class UserService {
       0,
     );
 
-    // Update profile statistics
-    await this.prismaService.profile.update({
+    await this.prismaService.profile.upsert({
       where: { userId: user.id },
-      data: {
+      create: {
+        userId: user.id,
+        totalConnections,
+        totalContainers,
+        activeContainers,
+      },
+      update: {
         totalConnections,
         totalContainers,
         activeContainers,
@@ -104,7 +111,7 @@ export class UserService {
     const logs = await this.prismaService.log.findMany({
       where: { userId },
       orderBy: { timestamp: 'desc' },
-      take: 50, // Last 50 activities
+      take: 50,
     });
 
     return logs;
@@ -151,9 +158,7 @@ export class UserService {
       include: { profile: true },
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throw new UserNotFoundException();
 
     const updatedProfile = await this.prismaService.profile.upsert({
       where: { userId },
@@ -176,13 +181,15 @@ export class UserService {
       include: { profile: true },
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throw new UserNotFoundException();
 
-    const updatedProfile = await this.prismaService.profile.update({
+    const updatedProfile = await this.prismaService.profile.upsert({
       where: { userId },
-      data: updatePreferencesDto,
+      create: {
+        ...updatePreferencesDto,
+        userId,
+      },
+      update: updatePreferencesDto,
     });
 
     return updatedProfile;
@@ -193,9 +200,7 @@ export class UserService {
       where: { id: userId },
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throw new UserNotFoundException();
 
     // Define limits based on account type
     const limits = {
@@ -242,9 +247,7 @@ export class UserService {
       },
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throw new UserNotFoundException();
 
     return {
       currentContainers: user.connections.reduce(
@@ -253,7 +256,6 @@ export class UserService {
       ),
       currentConnections: user.connections.length,
       storageUsed: user.profile?.diskUsage || 0,
-      // Note: Bandwidth usage would typically come from a monitoring service
       bandwidthUsed: 0,
     };
   }

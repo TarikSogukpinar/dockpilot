@@ -25,7 +25,7 @@ import { CustomRequest } from '../core/request/customRequest';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Get('me')
   @ApiOperation({ summary: 'Get current user information' })
@@ -35,7 +35,11 @@ export class UserController {
     type: GetMeResponseDto,
   })
   async getMe(@Req() req: CustomRequest) {
-    return this.userService.getMe(req.user.id);
+    const result = await this.userService.getMe(req.user.id);
+    return {
+      message: 'Successfully get current user information!',
+      result,
+    };
   }
 
   @Get('stats')
@@ -45,7 +49,11 @@ export class UserController {
     description: 'Returns user statistics including containers and connections',
   })
   async getUserStats(@Req() req: CustomRequest) {
-    return this.userService.getUserStats(req.user.id);
+    const result = await this.userService.getUserStats(req.user.id);
+    return {
+      message: 'Successfully get user statistics!',
+      result,
+    };
   }
 
   @Get('activity')
@@ -55,7 +63,11 @@ export class UserController {
     description: 'Returns user activity logs',
   })
   async getUserActivity(@Req() req: CustomRequest) {
-    return this.userService.getUserActivity(req.user.id);
+    const result = await this.userService.getUserActivity(req.user.id);
+    return {
+      message: 'Successfully get user activity!',
+      result,
+    };
   }
 
   @Get('search')
@@ -65,7 +77,11 @@ export class UserController {
     description: 'Returns users matching the search criteria',
   })
   async searchUsers(@Query('q') query: string) {
-    return this.userService.searchUsers(query);
+    const result = await this.userService.searchUsers(query);
+    return {
+      message: 'Successfully search users!',
+      result,
+    };
   }
 
   @Put('profile')
@@ -78,7 +94,11 @@ export class UserController {
     @Req() req: CustomRequest,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    return this.userService.updateProfile(req.user.id, updateProfileDto);
+    const result = await this.userService.updateProfile(req.user.id, updateProfileDto);
+    return {
+      message: 'Successfully update user profile!',
+      result,
+    };
   }
 
   @Put('preferences')
@@ -91,10 +111,14 @@ export class UserController {
     @Req() req: CustomRequest,
     @Body() updatePreferencesDto: UpdatePreferencesDto,
   ) {
-    return this.userService.updatePreferences(
+    const result = await this.userService.updatePreferences(
       req.user.id,
       updatePreferencesDto,
     );
+    return {
+      message: 'Successfully update user preferences!',
+      result,
+    };
   }
 
   @Get('limits')
@@ -104,7 +128,11 @@ export class UserController {
     description: 'Returns user account limits and current usage',
   })
   async getUserLimits(@Req() req: CustomRequest) {
-    return this.userService.getUserLimits(req.user.id);
+    const result = await this.userService.getUserLimits(req.user.id);
+    return {
+      message: 'Successfully get user account limits!',
+      result,
+    };
   }
 
   @Get('usage')
@@ -114,6 +142,10 @@ export class UserController {
     description: 'Returns detailed resource usage statistics',
   })
   async getResourceUsage(@Req() req: CustomRequest) {
-    return this.userService.getResourceUsage(req.user.id);
+    const result = await this.userService.getResourceUsage(req.user.id);
+    return {
+      message: 'Successfully get detailed resource usage!',
+      result,
+    };
   }
 }

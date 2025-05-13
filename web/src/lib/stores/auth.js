@@ -8,6 +8,7 @@ import { config, getApiUrl } from '../config';
  * @property {string} id
  * @property {string} email
  * @property {string} name
+ * @property {string} [role]
  */
 
 /**
@@ -31,11 +32,29 @@ const createAuthStore = () => {
         subscribe,
         /**
          * @param {string} token
-         * @param {User} user
+         * @param {any} user - User data from API
          */
         login: (token, user) => {
-            const authState = { isAuthenticated: true, token, user };
+            // Normalize user object structure
+            const normalizedUser = {
+                id: user.id || user.uuid || '',
+                email: user.email || '',
+                name: user.name || '',
+                role: user.role || 'USER',
+                // Other fields can be added here if needed
+            };
+            
+            const authState = { isAuthenticated: true, token, user: normalizedUser };
             set(authState);
+            console.log('Auth store updated with user:', normalizedUser);
+        },
+        /**
+         * Set token without user data (for API calls before user data is loaded)
+         * @param {string} token - Auth token
+         */
+        setToken: (token) => {
+            update(state => ({ ...state, token, isAuthenticated: !!token }));
+            console.log('Token set in auth store');
         },
         logout: () => {
             // Send request to logout endpoint to clear the cookie
